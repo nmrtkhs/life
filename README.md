@@ -1,2 +1,2 @@
 # life
-[デモ](nmrtkhs.github.io/life/)
+[デモ](http://nmrtkhs.github.io/life/)
