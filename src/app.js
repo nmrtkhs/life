@@ -73,6 +73,7 @@ var HelloWorldScene = cc.Scene.extend({
         this._super();
         var layer = new HelloWorldLayer();
         this.addChild(layer);
+        var modal = new InputNameLayer();
+        this.addChild(modal);
     }
 });
-
