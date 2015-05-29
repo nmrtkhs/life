@@ -2,13 +2,13 @@ var InputNameLayer = ModalLayer.extend({
   _className: "InputNameLayer",
   _box: null,
 
-  ctor: function() {
+  ctor: function(onCallback) {
     this._super();
     cc.associateWithNative(this, cc.Layer);
-    InputNameLayer.prototype.init.call(this);
+    InputNameLayer.prototype.init.call(this, onCallback);
   },
 
-  init: function() {
+  init: function(onCallback) {
     var winSize = cc.director.getWinSize();
     this._box = new cc.EditBox(
       // cc.size(winSize.width * .7, winSize.height * .1),
@@ -31,11 +31,19 @@ var InputNameLayer = ModalLayer.extend({
     button.setScale9Enabled(true);
     // button.loadTextures("res/button_red.png", "res/cocosui/buttonHighlighted.png", "");
     button.loadTextures("res/button_red.png");
-    button.x = this.getLayer().width / 2.0;
-    button.y = this.getLayer().height / 2.0;
-    button.setContentSize(cc.size(150, 48));
+    // button.x = this.getLayer().width / 2.0;
+    // button.y = this.getLayer().height / 2.0;
+    button.setPosition(winSize.width / 2, winSize.height / 2 - 100);
+    button.setContentSize(cc.size(winSize.width / 2, 50));
     button.setTitleFontSize(48);
-    button.addTouchEventListener(this.okClick ,this);
+    var clicked = false;
+    button.addTouchEventListener(function(){
+      var name = this._box.getString();
+      if (!clicked && name !== "") {
+        clicked = true;
+        onCallback(this._box.getString());
+      }
+    } ,this);
     button.setTitleText("決定");
     this.addChild(button);
   },

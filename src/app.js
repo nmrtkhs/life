@@ -68,12 +68,35 @@ var HelloWorldLayer = cc.Layer.extend({
     }
 });
 
+function streamXHREventsToLabel ( xhr, label, textbox, method ) {
+    // Simple events
+    ['loadstart', 'abort', 'error', 'load', 'loadend', 'timeout'].forEach(function (eventname) {
+        xhr["on" + eventname] = function () {
+            label.string += "\nEvent : " + eventname
+        }
+    });
+
+    // Special event
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && (xhr.status >= 200 && xhr.status <= 207)) {
+            var httpStatus = xhr.statusText;
+            var response = xhr.responseText.substring(0, 100) + "...";
+            textbox.string = method + " Response (100 chars):\n"
+            textbox.string += response
+            label.string += "\nStatus: Got " + method + " response! " + httpStatus
+        }
+    }
+}
+
 var HelloWorldScene = cc.Scene.extend({
     onEnter:function () {
         this._super();
         var layer = new HelloWorldLayer();
         this.addChild(layer);
-        var modal = new InputNameLayer();
+        var modal = new InputNameLayer(function(name){
+          cc.log(name);
+          modal.removeFromParent();
+        });
         this.addChild(modal);
     }
 });
