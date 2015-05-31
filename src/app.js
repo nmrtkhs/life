@@ -68,11 +68,11 @@ var HelloWorldLayer = cc.Layer.extend({
     }
 });
 
-function streamXHREventsToLabel ( xhr, label, textbox, method ) {
+function streamXHREventsToLabel (xhr) {
     // Simple events
     ['loadstart', 'abort', 'error', 'load', 'loadend', 'timeout'].forEach(function (eventname) {
         xhr["on" + eventname] = function () {
-            label.string += "\nEvent : " + eventname
+            // label.string += "\nEvent : " + eventname
         }
     });
 
@@ -81,9 +81,7 @@ function streamXHREventsToLabel ( xhr, label, textbox, method ) {
         if (xhr.readyState == 4 && (xhr.status >= 200 && xhr.status <= 207)) {
             var httpStatus = xhr.statusText;
             var response = xhr.responseText.substring(0, 100) + "...";
-            textbox.string = method + " Response (100 chars):\n"
-            textbox.string += response
-            label.string += "\nStatus: Got " + method + " response! " + httpStatus
+            cc.log(xhr.responseText);
         }
     }
 }
@@ -98,5 +96,14 @@ var HelloWorldScene = cc.Scene.extend({
           modal.removeFromParent();
         });
         this.addChild(modal);
+
+        var xhr = cc.loader.getXMLHttpRequest();
+        streamXHREventsToLabel(xhr);
+        // 5 seconds for timeout
+        xhr.timeout = 50000;
+
+        //set arguments with <URL>?xxx=xxx&yyy=yyy
+        xhr.open("GET", "http://www.shigotonavi.co.jp/api/search/?key=7e10c3a89d87cc92e20bd2b537ccccd2&spc=001", true);
+        xhr.send();
     }
 });
