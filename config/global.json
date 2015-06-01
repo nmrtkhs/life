@@ -1,0 +1,14 @@
+{
+  "global": {
+    "parseVersion": "1.4.2"
+  },
+  "applications": {
+    "_default": {
+      "link": "life"
+    },
+    "life": {
+      "applicationId": "mSG7zu4TcARzR3oyRADDXA2ShP6l7Kw5XigzNjUt",
+      "masterKey": "PNBC3NSKuqejpIuTT6T5XtnwXCMjSVls77AIRvLH"
+    }
+  }
+}

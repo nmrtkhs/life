@@ -97,13 +97,26 @@ var HelloWorldScene = cc.Scene.extend({
         });
         this.addChild(modal);
 
-        var xhr = cc.loader.getXMLHttpRequest();
-        streamXHREventsToLabel(xhr);
-        // 5 seconds for timeout
-        xhr.timeout = 50000;
+        cc.loader.loadJs("lib/parse-1.4.2.min.js", function(err){
+            if(err) return console.log("load failed");
+            //success
+            Parse.localStorage = sys.localStorage
+            Parse.initialize("", "");
 
-        //set arguments with <URL>?xxx=xxx&yyy=yyy
-        xhr.open("GET", "http://www.shigotonavi.co.jp/api/search/?key=7e10c3a89d87cc92e20bd2b537ccccd2&spc=001", true);
-        xhr.send();
+            var TestObject = Parse.Object.extend("TestObject");
+            var testObject = new TestObject();
+            testObject.save({foo: "bar"}).then(function(object) {
+                cc.log("yay! it worked");
+            });
+        });
+
+        // var xhr = cc.loader.getXMLHttpRequest();
+        // streamXHREventsToLabel(xhr);
+        // // 5 seconds for timeout
+        // xhr.timeout = 50000;
+        //
+        // //set arguments with <URL>?xxx=xxx&yyy=yyy
+        // xhr.open("GET", "http://www.shigotonavi.co.jp/api/search/?key=7e10c3a89d87cc92e20bd2b537ccccd2&spc=001", true);
+        // xhr.send();
     }
 });
