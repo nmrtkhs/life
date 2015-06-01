@@ -100,14 +100,22 @@ var HelloWorldScene = cc.Scene.extend({
         cc.loader.loadJs("lib/parse-1.4.2.min.js", function(err){
             if(err) return console.log("load failed");
             //success
-            Parse.localStorage = sys.localStorage
-            Parse.initialize("", "");
+            Parse.localStorage = cc.sys.localStorage
+            Parse.initialize("mSG7zu4TcARzR3oyRADDXA2ShP6l7Kw5XigzNjUt", "Fqu944VkhOEZaUsM80Me97rcpKvNuD4kfUCTHsRB");
 
             var TestObject = Parse.Object.extend("TestObject");
             var testObject = new TestObject();
             testObject.save({foo: "bar"}).then(function(object) {
                 cc.log("yay! it worked");
             });
+
+            Parse.Cloud.run('hello', {spc: "001"}, {
+              success: function(result) {
+                cc.log(result);
+              },
+              error: function(error) {
+              }
+          });
         });
 
         // var xhr = cc.loader.getXMLHttpRequest();
