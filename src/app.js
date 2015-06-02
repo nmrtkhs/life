@@ -1,73 +1,34 @@
 
-var HelloWorldLayer = cc.Layer.extend({
+var TitleLayer = cc.Layer.extend({
     sprite:null,
     ctor:function () {
-        //////////////////////////////
-        // 1. super init first
         this._super();
 
-        /////////////////////////////
-        // 2. add a menu item with "X" image, which is clicked to quit the program
-        //    you may modify it.
-        // ask the window size
         var size = cc.winSize;
 
-        // add a "close" icon to exit the progress. it's an autorelease object
-        var closeItem = new cc.MenuItemImage(
-            res.CloseNormal_png,
-            res.CloseSelected_png,
-            function () {
-                cc.log("Menu is clicked!");
-            }, this);
-        closeItem.attr({
-            x: size.width - 20,
-            y: 20,
-            anchorX: 0.5,
-            anchorY: 0.5
-        });
+        var startLabel = new cc.LabelTTF("Tap Start", "Arial", 38);
+        startLabel.x = size.width / 2;
+        startLabel.y = size.height / 2 - 200;
 
-        var menu = new cc.Menu(closeItem);
-        menu.x = 0;
-        menu.y = 0;
-        this.addChild(menu, 1);
+        // 後でblinkじゃなく通常のactionで実装する
+        startLabel.runAction(cc.blink(30, 30));
+        this.addChild(startLabel, 5);
 
-        /////////////////////////////
-        // 3. add your codes below...
-        // add a label shows "Hello World"
-        // create and initialize a label
-        var helloLabel = new cc.LabelTTF("Hello World", "Arial", 38);
-        // position the label on the center of the screen
-        helloLabel.x = size.width / 2;
-        helloLabel.y = 0;
-        // add the label as a child to this layer
-        this.addChild(helloLabel, 5);
-
-        // add "HelloWorld" splash screen"
-        this.sprite = new cc.Sprite(res.HelloWorld_png);
+        // add "startWorld" splash screen"
+        this.sprite = new cc.Sprite(res.Title_png);
         this.sprite.attr({
             x: size.width / 2,
             y: size.height / 2,
-            scale: 0.5,
-            rotation: 180
+            scale: 1,
+            // rotation: 180
         });
         this.addChild(this.sprite, 0);
 
-        this.sprite.runAction(
-            cc.sequence(
-                cc.rotateTo(2, 0),
-                cc.scaleTo(2, 1, 1)
-            )
-        );
-        helloLabel.runAction(
-            cc.spawn(
-                cc.moveBy(2.5, cc.p(0, size.height - 40)),
-                cc.tintTo(2.5,255,125,0)
-            )
-        );
         return true;
     }
 });
 
+// xhr使わないならいらないかも
 function streamXHREventsToLabel (xhr) {
     // Simple events
     ['loadstart', 'abort', 'error', 'load', 'loadend', 'timeout'].forEach(function (eventname) {
@@ -86,45 +47,54 @@ function streamXHREventsToLabel (xhr) {
     }
 }
 
-var HelloWorldScene = cc.Scene.extend({
+var TitleScene = cc.Scene.extend({
     onEnter:function () {
         this._super();
-        var layer = new HelloWorldLayer();
+
+        var layer = new TitleLayer();
         this.addChild(layer);
-        var modal = new InputNameLayer(function(name){
-          cc.log(name);
-          modal.removeFromParent();
-        });
-        this.addChild(modal);
 
-        cc.loader.loadJs("lib/parse-1.4.2.min.js", function(err){
-            if(err) return console.log("load failed");
-            //success
-            Parse.localStorage = cc.sys.localStorage
-            Parse.initialize("mSG7zu4TcARzR3oyRADDXA2ShP6l7Kw5XigzNjUt", "Fqu944VkhOEZaUsM80Me97rcpKvNuD4kfUCTHsRB");
-
-            var TestObject = Parse.Object.extend("TestObject");
-            var testObject = new TestObject();
-            testObject.save({foo: "bar"}).then(function(object) {
-                cc.log("yay! it worked");
-            });
-
-            Parse.Cloud.run('hello', {spc: "001"}, {
-              success: function(result) {
-                cc.log(result);
-              },
-              error: function(error) {
-              }
-          });
-        });
-
-        // var xhr = cc.loader.getXMLHttpRequest();
-        // streamXHREventsToLabel(xhr);
-        // // 5 seconds for timeout
-        // xhr.timeout = 50000;
+        var listener = cc.eventManager.addListener({
+          event: cc.EventListener.TOUCH_ONE_BY_ONE,
+          onTouchBegan: function(touch, event) {
+              return true;
+          },
+          onTouchEnded: function(touch, event) {
+            // 何度もおせないように一度押したらアクションを無効化する
+            cc.eventManager.removeListener(listener);
+            var modal = new InputNameLayer(function(name) {
+              cc.log(name);
+              modal.removeFromParent();
+              var delay = cc.delayTime(0.5);
+              var startGame = cc.callFunc(function() {
+                var scene = new GameScene();
+                var transition = new cc.TransitionSlideInL(0.5, scene, true);
+                cc.director.runScene(transition);
+              }, this);
+              this.runAction(cc.sequence(delay, startGame));
+            }.bind(this));
+            this.addChild(modal);
+          }.bind(this),
+        }, this);
+        // cc.loader.loadJs("lib/parse-1.4.2.min.js", function(err){
+        //     if(err) return console.log("load failed");
+        //     //success
+        //     Parse.localStorage = cc.sys.localStorage
+        //     Parse.initialize("mSG7zu4TcARzR3oyRADDXA2ShP6l7Kw5XigzNjUt", "Fqu944VkhOEZaUsM80Me97rcpKvNuD4kfUCTHsRB");
         //
-        // //set arguments with <URL>?xxx=xxx&yyy=yyy
-        // xhr.open("GET", "http://www.shigotonavi.co.jp/api/search/?key=7e10c3a89d87cc92e20bd2b537ccccd2&spc=001", true);
-        // xhr.send();
+        //     var TestObject = Parse.Object.extend("TestObject");
+        //     var testObject = new TestObject();
+        //     testObject.save({foo: "bar"}).then(function(object) {
+        //         cc.log("yay! it worked");
+        //     });
+        //
+        //     Parse.Cloud.run('hello', {spc: "001"}, {
+        //       success: function(result) {
+        //         cc.log(result);
+        //       },
+        //       error: function(error) {
+        //       }
+        //   });
+        // });
     }
 });

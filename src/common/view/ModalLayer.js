@@ -9,7 +9,7 @@ var ModalLayer = cc.LayerColor.extend({
 
   init: function() {
     var winSize = cc.director.getWinSize();
-    _layer = new cc.LayerColor(cc.color(238, 238, 238), winSize.width * .9, winSize.height * .9);
+    _layer = new cc.LayerColor(cc.color(238, 238, 238), winSize.width * .8, winSize.height * .3);
     _layer.setAnchorPoint(0.5, 0.5);
     _layer.setPosition(winSize.width / 2, winSize.height / 2);
     _layer._ignoreAnchorPointForPosition = false;
