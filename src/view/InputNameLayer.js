@@ -29,6 +29,7 @@ var InputNameLayer = ModalLayer.extend({
     var button = new ccui.Button();
     button.setTouchEnabled(true);
     button.setScale9Enabled(true);
+    // button.setScale9Enabled(cc.Rect(30 , 10, 10, 10));
     // button.loadTextures("res/button_red.png", "res/cocosui/buttonHighlighted.png", "");
     button.loadTextures("res/button_red.png");
     // button.x = this.getLayer().width / 2.0;

@@ -63,7 +63,8 @@ var TitleScene = cc.Scene.extend({
             // 何度もおせないように一度押したらアクションを無効化する
             cc.eventManager.removeListener(listener);
             var modal = new InputNameLayer(function(name) {
-              cc.log(name);
+              this.removeChild(layer);
+              TestData.UserData.name = name;
               modal.removeFromParent();
               var delay = cc.delayTime(0.5);
               var startGame = cc.callFunc(function() {
