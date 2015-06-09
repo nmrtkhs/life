@@ -16,8 +16,10 @@
     "jsList" : [
         "src/resource.js",
         "vendor/parse-1.4.2.min.js",
+        "lib/statemachine.js",
         "src/test/testData.js",
         "src/common/view/ModalLayer.js",
+        "src/view/DialogLayer.js",
         "src/view/InputNameLayer.js",
         "src/view/TitleScene.js",
         "src/view/game.js"
