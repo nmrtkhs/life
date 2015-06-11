@@ -46,7 +46,8 @@
  }
  *
  */
-
+ // ステートマシン用のイベントキュー。statemachineにもつか迷うな
+var eventQueue;
 cc.game.onStart = function(){
     if(!cc.sys.isNative && document.getElementById("cocosLoading")) //If referenced loading.js, please remove it
         document.body.removeChild(document.getElementById("cocosLoading"));
@@ -60,6 +61,7 @@ cc.game.onStart = function(){
     // The game will be resized when browser size change
     cc.view.resizeWithBrowserSize(true);
     //load resources
+    eventQueue = new Queue();
     cc.LoaderScene.preload(g_resources, function () {
         // cc.director.runScene(new TitleScene());
         cc.director.runScene(new GameScene());

@@ -1,38 +1,51 @@
 var GridLayer = cc.Layer.extend({
-  ctor:function()  {
+  ctor:function(posX, posY, areaId)  {
     this._super();
 
     var gridMaster = TestData.AreaMaster[1].gridMaster;
     var size = cc.winSize;
     var centerPos = cc.p(size.width / 2, size.height / 2);
+    var isGoal = false;
+    var isJunction = false;
     for (var i = 0; i < gridMaster.length; ++i) {
-      var grid = TestData.AreaMaster[1].gridMaster[i];
+      var grid = TestData.AreaMaster[areaId].gridMaster[i];
       var resourcePath;
-      cc.log(grid);
       switch (grid.type) {
         case "plus":
-        resourcePath = res.GridYellow_png;
-        break;
+          resourcePath = res.GridYellow_png;
+          break;
         case "minus":
-        resourcePath = res.GridBlue_png;
-        break;
+          resourcePath = res.GridBlue_png;
+          break;
+        case "junction":
+          resourcePath = res.GridBlue_png;
+          isJunction = true;
+          break;
         default:
       }
       this.sprite = new cc.Sprite(resourcePath);
-      var x = size.width / 2;
-      var y = 128 * i + 128;
+      var x = size.width / 2 + posX;
+      var y = 128 * i + posY + 100;
 
       var direction = i % 2 == 0 ? 1 : -1;
       var draw = new cc.DrawNode();
-      this.addChild(draw);
-      draw.drawQuadBezier(cc.p(x, y), cc.p(x + (direction * 64), y + 64), cc.p(x, y + 128), 50, 10, cc.color(255, 0, 255, 255));
+      this.addChild(draw, 0);
+
+      if (isJunction) {
+        draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(255, 0, 255, 255));
+        draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(255, 0, 255, 255));
+      } else if (!isGoal) {
+        draw.drawSegment(cc.p(x, y), cc.p(x, y + 128), 5, cc.color(255, 0, 255, 255));
+      }
+      // ベジェ曲線の描画ロジック
+      // draw.drawQuadBezier(cc.p(x, y), cc.p(x + (direction * 64), y + 64), cc.p(x, y + 128), 3, 10, cc.color(255, 0, 255, 255));
 
       this.sprite.attr({
         x: x,
         y: y
       });
       this.sprite.setScale(.4);
-      this.addChild(this.sprite, 0);
+      this.addChild(this.sprite, 1);
     }
   }
 });
@@ -41,20 +54,27 @@ var BgLayer = cc.Layer.extend({
   sprite:null,
   currentProgress:0,
   nextProgress: 0,
-  ctor:function () {
+  ctor:function (posY, mapMaster) {
     this._super();
 
     var size = cc.winSize;
     this.sprite = new cc.Sprite(res.BgGreen_png);
     this.sprite.attr({
         x: size.width / 2,
-        y: size.height / 2,
+        y: size.height / 2 + posY + 100
     });
     this.sprite.setScale(size.height / this.sprite.getContentSize().height);
     this.addChild(this.sprite);
 
-    var gridLayer = new GridLayer();
-    this.addChild(gridLayer);
+    _.each(mapMaster, function(areaId, areaKey) {
+      _areaId = areaId;
+      var posX = 0;
+      if (mapMaster.length >= 2) {
+        posX = areaKey == 0 ? -128 : 128;
+      }
+      var gridLayer = new GridLayer(posX, posY, areaId);
+      this.addChild(gridLayer);
+    }.bind(this));
 
     return true;
   },
@@ -65,16 +85,28 @@ var BgLayer = cc.Layer.extend({
   },
 
   playForwardAnim: function() {
-    var direction = this.currentProgress % 2 == 0 ? -64 : 64;
-    var controlPoints = [ cc.p(0, 0), cc.p(direction, -64), cc.p(0, -128) ];
-    var bezierForward = cc.bezierBy(3, controlPoints);
-    var rep = cc.sequence(bezierForward, cc.callFunc(function(){
-      this.currentProgress++;
-      if (this.currentProgress < this.nextProgres) {
-        this.playForwardAnim();
-      }
-    }, this));
-    this.runAction(rep);
+    var sequence = cc.sequence(
+      cc.moveBy(1, cc.p(0, -128)),
+      cc.callFunc(function(){
+        this.currentProgress++;
+        if (this.currentProgress < this.nextProgres) {
+          this.playForwardAnim();
+        }
+      }, this)
+    );
+    this.runAction(sequence);
+
+    // ベジェ曲線の移動ロジック
+    // var direction = this.currentProgress % 2 == 0 ? -64 : 64;
+    // var controlPoints = [ cc.p(0, 0), cc.p(direction, -64), cc.p(0, -128) ];
+    // var bezierForward = cc.bezierBy(3, controlPoints);
+    // var rep = cc.sequence(bezierForward, cc.callFunc(function(){
+    //   this.currentProgress++;
+    //   if (this.currentProgress < this.nextProgres) {
+    //     this.playForwardAnim();
+    //   }
+    // }, this));
+    // this.runAction(rep);
   }
 });
 
@@ -86,7 +118,7 @@ var PlayerLayer = cc.Layer.extend({
     var size = cc.winSize;
     this.sprite = new cc.Sprite(res.Player_png);
     var x = size.width / 2;
-    var y = 160;
+    var y = 142;
     this.sprite.attr({
         x: x,
         y: y
@@ -102,6 +134,7 @@ var PlayerLayer = cc.Layer.extend({
 var StatusLayer = cc.Layer.extend({
   turnLabel: null,
   nameLabel: null,
+  isTapDice: false,
   ctor: function() {
     this._super();
     var draw = new cc.DrawNode();
@@ -155,6 +188,18 @@ var StatusLayer = cc.Layer.extend({
       cc.p(0, 100),
     ];
     draw.drawPoly(bottomPoints, cc.color(255,0,0,128), 8, cc.color(0,128,128,255));
+
+    var button = new ccui.Button();
+    button.setTouchEnabled(true);
+    button.loadTextures("res/button_dice.png");
+    button.setPosition(winSize.width - 60, 60);
+    button.setScale(.5);
+    // button.setContentSize(cc.size(10, 10));
+    button.addTouchEventListener(function(){
+      eventQueue.enqueue("tapDice");
+    } ,this);
+    this.addChild(button);
+
     return;
   },
 
@@ -165,15 +210,19 @@ var StatusLayer = cc.Layer.extend({
 
 var GameScene = cc.Scene.extend({
   stateMachine: null,
-  bgLayer: null,
-  isTap: false,
+  bgLayer: [],
   ctor: function() {
     this._super();
     this.stateMachine = new StateMachine(this);
     this.stateMachine.spawn(this.stateWaitInput);
 
-    this.bgLayer = new BgLayer();
-    this.addChild(this.bgLayer);
+    var bgPos = 0;
+    _.each(TestData.MapMaster, function(mapMaster) {
+      var bgLayer = new BgLayer(bgPos, mapMaster);
+      bgPos += TestData.AreaMaster[_areaId].gridMaster.length * 128;
+      this.bgLayer.push(bgLayer);
+      this.addChild(bgLayer);
+    }.bind(this));
 
     var playerLayer = new PlayerLayer();
     this.addChild(playerLayer);
@@ -188,7 +237,6 @@ var GameScene = cc.Scene.extend({
           return true;
       },
       onTouchEnded: function(touch, event) {
-        this.isTap = true;
         // 何度もおせないように一度押したらアクションを無効化する
         // cc.eventManager.removeListener(listener);
       }.bind(this),
@@ -204,13 +252,21 @@ var GameScene = cc.Scene.extend({
     this.stateMachine.exec();
   },
   stateWaitInput: function() {
-    if (this.isTap) {
-      this.isTap = false;
-      var dialogLayer = new DialogLayer("進みますよ,まじで進みますよ、本当に進みますよそれでもいいんですか？", function(){
-        this.bgLayer.forward(9);
-      }.bind(this));
-      this.addChild(dialogLayer);
-      this.stateMachine.switchTo(this.stateWaitForward);
+    while (event = eventQueue.dequeue()) {
+      switch (event) {
+        case 'tapDice':
+          var progress = _.random(1, 6);
+          var dialogLayer = new DialogLayer( progress + "進みますよ,まじで進みますよ、本当に進みますよそれでもいいんですか？", function(){
+            _.each(this.bgLayer, function(bgLayer){
+             bgLayer.forward(progress);
+            });
+          }.bind(this));
+          this.addChild(dialogLayer);
+          this.stateMachine.switchTo(this.stateWaitForward);
+          break;
+        default:
+        break;
+      }
     }
   },
   stateWaitForward: function() {
