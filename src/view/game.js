@@ -1,29 +1,19 @@
 var GridLayer = cc.Layer.extend({
   ctor:function(posX, posY, areaId)  {
     this._super();
+    var gridColor = {
+      'start': cc.color(255, 0, 0),
+      'plus': cc.color(0, 255, 255),
+      'minus': cc.color(0, 0, 255),
+      'end': cc.color(0,0,0)
+    }
 
-    var gridMaster = TestData.AreaMaster[1].gridMaster;
+    var areaMaster = TestData.AreaMaster[areaId];
     var size = cc.winSize;
     var centerPos = cc.p(size.width / 2, size.height / 2);
-    var isGoal = false;
-    var isJunction = false;
-    for (var i = 0; i < gridMaster.length; ++i) {
-      var grid = TestData.AreaMaster[areaId].gridMaster[i];
-      var resourcePath;
-      switch (grid.type) {
-        case "plus":
-          resourcePath = res.GridYellow_png;
-          break;
-        case "minus":
-          resourcePath = res.GridBlue_png;
-          break;
-        case "junction":
-          resourcePath = res.GridBlue_png;
-          isJunction = true;
-          break;
-        default:
-      }
-      this.sprite = new cc.Sprite(resourcePath);
+    for (var i = 0; i < areaMaster.gridMaster.length; ++i) {
+      var grid = areaMaster.gridMaster[i];
+      // this.sprite = new cc.Sprite(resourcePath);
       var x = size.width / 2 + posX;
       var y = 128 * i + posY + 100;
 
@@ -31,21 +21,35 @@ var GridLayer = cc.Layer.extend({
       var draw = new cc.DrawNode();
       this.addChild(draw, 0);
 
-      if (isJunction) {
-        draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(255, 0, 255, 255));
-        draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(255, 0, 255, 255));
-      } else if (!isGoal) {
+      if (i == areaMaster.gridMaster.length - 1) {
+        switch (areaMaster.endType) {
+          case "normal":
+            draw.drawSegment(cc.p(x, y), cc.p(x, y + 128), 5, cc.color(255, 0, 255, 255));
+            break;
+
+          case "toTwo":
+            draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(255, 0, 255, 255));
+            draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(255, 0, 255, 255));
+            break;
+
+          case "toOne":
+            if (posX > 0) {
+              draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(255, 0, 255, 255));
+            } else {
+              draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(255, 0, 255, 255));
+            }
+          break;
+          default:
+          break;
+        }
+      } else {
         draw.drawSegment(cc.p(x, y), cc.p(x, y + 128), 5, cc.color(255, 0, 255, 255));
       }
       // ベジェ曲線の描画ロジック
       // draw.drawQuadBezier(cc.p(x, y), cc.p(x + (direction * 64), y + 64), cc.p(x, y + 128), 3, 10, cc.color(255, 0, 255, 255));
 
-      this.sprite.attr({
-        x: x,
-        y: y
-      });
-      this.sprite.setScale(.4);
-      this.addChild(this.sprite, 1);
+      draw.drawDot(cc.p(x, y), 40, cc.color(255, 0, 255, 255));
+      draw.drawDot(cc.p(x, y), 35, gridColor[areaMaster.gridMaster[i].type]);
     }
   }
 });
@@ -78,36 +82,6 @@ var BgLayer = cc.Layer.extend({
 
     return true;
   },
-
-  forward: function(progress) {
-    this.nextProgres = this.currentProgress + progress;
-    this.playForwardAnim();
-  },
-
-  playForwardAnim: function() {
-    var sequence = cc.sequence(
-      cc.moveBy(1, cc.p(0, -128)),
-      cc.callFunc(function(){
-        this.currentProgress++;
-        if (this.currentProgress < this.nextProgres) {
-          this.playForwardAnim();
-        }
-      }, this)
-    );
-    this.runAction(sequence);
-
-    // ベジェ曲線の移動ロジック
-    // var direction = this.currentProgress % 2 == 0 ? -64 : 64;
-    // var controlPoints = [ cc.p(0, 0), cc.p(direction, -64), cc.p(0, -128) ];
-    // var bezierForward = cc.bezierBy(3, controlPoints);
-    // var rep = cc.sequence(bezierForward, cc.callFunc(function(){
-    //   this.currentProgress++;
-    //   if (this.currentProgress < this.nextProgres) {
-    //     this.playForwardAnim();
-    //   }
-    // }, this));
-    // this.runAction(rep);
-  }
 });
 
 var PlayerLayer = cc.Layer.extend({
@@ -134,7 +108,6 @@ var PlayerLayer = cc.Layer.extend({
 var StatusLayer = cc.Layer.extend({
   turnLabel: null,
   nameLabel: null,
-  isTapDice: false,
   ctor: function() {
     this._super();
     var draw = new cc.DrawNode();
@@ -211,6 +184,13 @@ var StatusLayer = cc.Layer.extend({
 var GameScene = cc.Scene.extend({
   stateMachine: null,
   bgLayer: [],
+  playerLayer: null,
+  remainingStep: 0,
+  endBgProgressNum: 0,
+  isSelect: false,
+  currentMap: 0,
+  currentArea: "1",
+  currentProgress: 0,
   ctor: function() {
     this._super();
     this.stateMachine = new StateMachine(this);
@@ -224,8 +204,8 @@ var GameScene = cc.Scene.extend({
       this.addChild(bgLayer);
     }.bind(this));
 
-    var playerLayer = new PlayerLayer();
-    this.addChild(playerLayer);
+    this.playerLayer = new PlayerLayer();
+    this.addChild(this.playerLayer);
 
     var statusLayer = new StatusLayer();
     statusLayer.updateTurn(30);
@@ -255,20 +235,115 @@ var GameScene = cc.Scene.extend({
     while (event = eventQueue.dequeue()) {
       switch (event) {
         case 'tapDice':
-          var progress = _.random(1, 6);
-          var dialogLayer = new DialogLayer( progress + "進みますよ,まじで進みますよ、本当に進みますよそれでもいいんですか？", function(){
-            _.each(this.bgLayer, function(bgLayer){
-             bgLayer.forward(progress);
-            });
+          this.remainingStep = _.random(1, 6);
+          // this.remainingStep = 19;
+          var dialogLayer = new DialogLayer( this.remainingStep + "進みますよ,まじで進みますよ、本当に進みますよそれでもいいんですか？", function(){
+            this.endBgProgress = 0;
+            this.isSelect = true;
           }.bind(this));
           this.addChild(dialogLayer);
-          this.stateMachine.switchTo(this.stateWaitForward);
-          break;
+          this.stateMachine.switchTo(this.stateConfirmProgress);
+          return;
         default:
         break;
       }
     }
   },
-  stateWaitForward: function() {
+  stateConfirmProgress: function() {
+    if (this.isSelect) {
+      this.isSelect = false;
+      // this.stateMachine.switchTo(this.stateForward);
+      this.stateMachine.switchTo(this.stateCheckJunction);
+    }
+  },
+  stateCheckJunction: function() {
+    var areaMaster = TestData.AreaMaster[this.currentArea];
+    if (this.currentProgress >= areaMaster.gridMaster.length - 1) {
+      if (areaMaster.endType == "toTwo") {
+        var dialogLayer = new DialogLayer("どちらに進みますか", function(){
+          this.isSelect = true;
+        }.bind(this));
+        this.addChild(dialogLayer);
+        this.stateMachine.switchTo(this.stateWaitJunction);
+      } else if (areaMaster.endType = "toOne") {
+        if (this.playerLayer.getPosition().x > 0) {
+          this.playerLayer.runAction(cc.moveBy(1, cc.p(-128, 0)))
+        } else {
+          this.playerLayer.runAction(cc.moveBy(1, cc.p(128, 0)))
+        }
+        this.stateMachine.switchTo(this.stateForward);
+      }
+    } else {
+      this.stateMachine.switchTo(this.stateForward);
+    }
+  },
+  stateWaitJunction: function() {
+    if (this.isSelect) {
+      this.isSelect = false;
+      this.playerLayer.runAction(cc.moveBy(1, cc.p(128, 0)))
+      this.currentMap++;
+      this.currentProgress = -1;
+      this.currentArea = TestData.MapMaster[this.currentMap][0];
+      this.stateMachine.switchTo(this.stateForward);
+    }
+  },
+  stateForward: function() {
+    this.remainingStep--;
+    this.currentProgress++;
+    if (this.currentProgress >= TestData.AreaMaster[this.currentArea].gridMaster.length) {
+      this.currentProgress = 0;
+      this.currentMap++;
+      this.currentArea = TestData.MapMaster[this.currentMap][0];
+    }
+    _.each(this.bgLayer, function(bgLayer){
+      // bgLayer.forward(progress);
+      var sequence = cc.sequence(
+        cc.moveBy(1, cc.p(0, -128)),
+        cc.callFunc(function(){
+          this.endBgProgressNum++;
+        }, this)
+      );
+      bgLayer.runAction(sequence);
+    }.bind(this));
+
+    this.stateMachine.switchTo(this.stateForwarding);
+  },
+  stateForwarding: function() {
+    // 全てのアニメが完了
+    if (this.endBgProgressNum == this.bgLayer.length) {
+      this.endBgProgressNum = 0;
+      if (TestData.AreaMaster[this.currentArea].gridMaster[this.currentProgress].type == "goal") {
+        var dialogLayer = new DialogLayer("おめでとう！！ゴールしました", function(){
+          this.isSelect = true;
+        }.bind(this));
+        this.addChild(dialogLayer);
+        this.stateMachine.switchTo(this.stateEnd);
+        return;
+      }
+      if (this.remainingStep <= 0) {
+        this.stateMachine.switchTo(this.stateEvent);
+      } else {
+        this.stateMachine.switchTo(this.stateCheckJunction);
+      }
+    }
+  },
+  stateEvent: function() {
+    cc.log("stateEvent");
+    var dialogLayer = new DialogLayer(TestData.AreaMaster[this.currentArea].gridMaster[this.currentProgress].description, function(){
+      this.isSelect = true;
+    }.bind(this));
+    this.addChild(dialogLayer);
+    this.stateMachine.switchTo(this.stateWaitEvent);
+  },
+  stateWaitEvent: function() {
+    cc.log("stateWaitEvent");
+    if (this.isSelect) {
+      this.isSelect = false;
+      eventQueue.clear();
+      this.stateMachine.switchTo(this.stateWaitInput);
+    }
+  },
+  stateEnd: function() {
+
   },
 });

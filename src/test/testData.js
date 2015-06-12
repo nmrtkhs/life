@@ -15,9 +15,10 @@ var TestData = {
     "1": {
       name: "東京",
       bgPath: "hoge/path",
+      endType: "toTwo",
       gridMaster: [
         {
-          type: "plus",
+          type: "start",
           value: 0,
           description: "hoge1"
         },
@@ -51,6 +52,7 @@ var TestData = {
     "2": {
       name: "東京-3",
       bgPath: "hoge/path",
+      endType: "toOne",
       gridMaster: [
         {
           type: "minus",
@@ -87,6 +89,7 @@ var TestData = {
     "3": {
       name: "東京-1",
       bgPath: "hoge/path",
+      endType: "toOne",
       gridMaster: [
         {
           type: "minus",
@@ -123,6 +126,7 @@ var TestData = {
     "4": {
       name: "東京-4",
       bgPath: "hoge/path",
+      endType: "end",
       gridMaster: [
         {
           type: "minus",
@@ -150,7 +154,7 @@ var TestData = {
           description: "hoge5"
         },
         {
-          type: "minus",
+          type: "goal",
           value: 0,
           description: "hoge6"
         },
