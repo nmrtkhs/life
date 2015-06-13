@@ -5,7 +5,7 @@ var GridLayer = cc.Layer.extend({
       'start': cc.color(255, 0, 0),
       'plus': cc.color(0, 255, 255),
       'minus': cc.color(0, 0, 255),
-      'end': cc.color(0,0,0)
+      'goal': cc.color(0,0,0)
     }
 
     var areaMaster = TestData.AreaMaster[areaId];
