@@ -1,7 +1,7 @@
-var GridLayer = cc.Layer.extend({
+var SpaceLayer = cc.Layer.extend({
   ctor:function(posX, posY, areaId)  {
     this._super();
-    var gridColor = {
+    var spaceColor = {
       'start': cc.color(255, 0, 0),
       'plus': cc.color(0, 255, 255),
       'minus': cc.color(0, 0, 255),
@@ -11,8 +11,9 @@ var GridLayer = cc.Layer.extend({
     var areaMaster = TestData.AreaMaster[areaId];
     var size = cc.winSize;
     var centerPos = cc.p(size.width / 2, size.height / 2);
-    for (var i = 0; i < areaMaster.gridMaster.length; ++i) {
-      var grid = areaMaster.gridMaster[i];
+    var spaceMaster = TestData.SpaceMaster[areaId];
+
+    for (var i = 0; i < spaceMaster.length; ++i) {
       // this.sprite = new cc.Sprite(resourcePath);
       var x = size.width / 2 + posX;
       var y = 128 * i + posY + 100;
@@ -21,8 +22,8 @@ var GridLayer = cc.Layer.extend({
       var draw = new cc.DrawNode();
       this.addChild(draw, 0);
 
-      if (i == areaMaster.gridMaster.length - 1) {
-        switch (areaMaster.endType) {
+      if (i == spaceMaster.length - 1) {
+        switch (areaMaster.junctionType) {
           case "normal":
             draw.drawSegment(cc.p(x, y), cc.p(x, y + 128), 5, cc.color(255, 0, 255, 255));
             break;
@@ -34,6 +35,7 @@ var GridLayer = cc.Layer.extend({
 
           case "toOne":
             if (posX > 0) {
+              cc.log("toone");
               draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(255, 0, 255, 255));
             } else {
               draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(255, 0, 255, 255));
@@ -49,16 +51,16 @@ var GridLayer = cc.Layer.extend({
       // draw.drawQuadBezier(cc.p(x, y), cc.p(x + (direction * 64), y + 64), cc.p(x, y + 128), 3, 10, cc.color(255, 0, 255, 255));
 
       draw.drawDot(cc.p(x, y), 40, cc.color(255, 0, 255, 255));
-      draw.drawDot(cc.p(x, y), 35, gridColor[areaMaster.gridMaster[i].type]);
+      draw.drawDot(cc.p(x, y), 35, spaceColor[spaceMaster[i].type]);
     }
   }
 });
 
 var BgLayer = cc.Layer.extend({
   sprite:null,
-  currentProgress:0,
+  currentAreaProgress:0,
   nextProgress: 0,
-  ctor:function (posY, mapMaster) {
+  ctor:function (posY, areaIds) {
     this._super();
 
     var size = cc.winSize;
@@ -70,14 +72,14 @@ var BgLayer = cc.Layer.extend({
     this.sprite.setScale(size.height / this.sprite.getContentSize().height);
     this.addChild(this.sprite);
 
-    _.each(mapMaster, function(areaId, areaKey) {
+    _.each(areaIds, function(areaId, areaKey) {
       _areaId = areaId;
       var posX = 0;
-      if (mapMaster.length >= 2) {
+      if (areaIds.length >= 2) {
         posX = areaKey == 0 ? -128 : 128;
       }
-      var gridLayer = new GridLayer(posX, posY, areaId);
-      this.addChild(gridLayer);
+      var spaceLayer = new SpaceLayer(posX, posY, areaId);
+      this.addChild(spaceLayer);
     }.bind(this));
 
     return true;
@@ -144,7 +146,7 @@ var StatusLayer = cc.Layer.extend({
       "名前:" + TestData.UserData.name,
       "Arial",
       24,
-      blockSize,
+      cc.size(400, 100),
       cc.TEXT_ALIGNMENT_LEFT,
       cc.VERTICAL_TEXT_ALIGNMENT_CENTER
     );
@@ -188,18 +190,20 @@ var GameScene = cc.Scene.extend({
   remainingStep: 0,
   endBgProgressNum: 0,
   isSelect: false,
-  currentMap: 0,
-  currentArea: "1",
-  currentProgress: 0,
+  isRightSelect: false,
+  currentMap: "47",
+  currentMapProgress: 0,
+  currentArea: "47_1",
+  currentAreaProgress: 0,
   ctor: function() {
     this._super();
     this.stateMachine = new StateMachine(this);
     this.stateMachine.spawn(this.stateWaitInput);
 
     var bgPos = 0;
-    _.each(TestData.MapMaster, function(mapMaster) {
-      var bgLayer = new BgLayer(bgPos, mapMaster);
-      bgPos += TestData.AreaMaster[_areaId].gridMaster.length * 128;
+    _.each(TestData.MapMaster[this.currentMap], function(mapMaster) {
+      var bgLayer = new BgLayer(bgPos, mapMaster.areaIds);
+      bgPos += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
       this.bgLayer.push(bgLayer);
       this.addChild(bgLayer);
     }.bind(this));
@@ -237,7 +241,7 @@ var GameScene = cc.Scene.extend({
         case 'tapDice':
           this.remainingStep = _.random(1, 6);
           // this.remainingStep = 19;
-          var dialogLayer = new DialogLayer( this.remainingStep + "進みますよ,まじで進みますよ、本当に進みますよそれでもいいんですか？", function(){
+          var dialogLayer = new DialogLayer( this.remainingStep + "進みますよ？", function(){
             this.endBgProgress = 0;
             this.isSelect = true;
           }.bind(this));
@@ -258,14 +262,18 @@ var GameScene = cc.Scene.extend({
   },
   stateCheckJunction: function() {
     var areaMaster = TestData.AreaMaster[this.currentArea];
-    if (this.currentProgress >= areaMaster.gridMaster.length - 1) {
-      if (areaMaster.endType == "toTwo") {
-        var dialogLayer = new DialogLayer("どちらに進みますか", function(){
+    if (this.currentAreaProgress >= TestData.SpaceMaster[this.currentArea].length - 1) {
+      if (areaMaster.junctionType == "toTwo") {
+        var dialogLayer = new DialogSelectLayer("どちらに進みますか", "右", "左", function(){
+          this.isSelect = true;
+          this.isRightSelect = true;
+        }.bind(this),
+        function() {
           this.isSelect = true;
         }.bind(this));
         this.addChild(dialogLayer);
         this.stateMachine.switchTo(this.stateWaitJunction);
-      } else if (areaMaster.endType = "toOne") {
+      } else if (areaMaster.junctionType = "toOne") {
         if (this.playerLayer.getPosition().x > 0) {
           this.playerLayer.runAction(cc.moveBy(1, cc.p(-128, 0)))
         } else {
@@ -280,20 +288,23 @@ var GameScene = cc.Scene.extend({
   stateWaitJunction: function() {
     if (this.isSelect) {
       this.isSelect = false;
-      this.playerLayer.runAction(cc.moveBy(1, cc.p(128, 0)))
-      this.currentMap++;
-      this.currentProgress = -1;
-      this.currentArea = TestData.MapMaster[this.currentMap][0];
+      this.playerLayer.runAction(cc.moveBy(1, cc.p(this.isRightSelect ? 128 : -128, 0)))
+      this.currentMapProgress++;
+      this.currentAreaProgress = -1;
+      var areaInfo = TestData.MapMaster[this.currentMap][this.currentMapProgress];
+      this.currentArea = areaInfo.areaIds[this.isRightSelect ? 0 : 1];
+      this.isRightSelect = false;
       this.stateMachine.switchTo(this.stateForward);
     }
   },
   stateForward: function() {
     this.remainingStep--;
-    this.currentProgress++;
-    if (this.currentProgress >= TestData.AreaMaster[this.currentArea].gridMaster.length) {
-      this.currentProgress = 0;
-      this.currentMap++;
-      this.currentArea = TestData.MapMaster[this.currentMap][0];
+    this.currentAreaProgress++;
+    if (this.currentAreaProgress >= TestData.SpaceMaster[this.currentArea].length) {
+      this.currentAreaProgress = 0;
+      this.currentMapProgress++;
+      var areaInfo = TestData.MapMaster[this.currentMap][this.currentMapProgress];
+      this.currentArea = areaInfo.areaIds[0];
     }
     _.each(this.bgLayer, function(bgLayer){
       // bgLayer.forward(progress);
@@ -312,7 +323,7 @@ var GameScene = cc.Scene.extend({
     // 全てのアニメが完了
     if (this.endBgProgressNum == this.bgLayer.length) {
       this.endBgProgressNum = 0;
-      if (TestData.AreaMaster[this.currentArea].gridMaster[this.currentProgress].type == "goal") {
+      if (TestData.SpaceMaster[this.currentArea][this.currentAreaProgress].type == "goal") {
         var dialogLayer = new DialogLayer("おめでとう！！ゴールしました", function(){
           this.isSelect = true;
         }.bind(this));
@@ -329,7 +340,7 @@ var GameScene = cc.Scene.extend({
   },
   stateEvent: function() {
     cc.log("stateEvent");
-    var dialogLayer = new DialogLayer(TestData.AreaMaster[this.currentArea].gridMaster[this.currentProgress].description, function(){
+    var dialogLayer = new DialogLayer(TestData.SpaceMaster[this.currentArea][this.currentAreaProgress].description, function(){
       this.isSelect = true;
     }.bind(this));
     this.addChild(dialogLayer);
