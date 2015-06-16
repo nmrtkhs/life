@@ -1,7 +1,7 @@
 var TestData = {
   UserData : {
     name: "",
-    turn: 0,
+    turn: 20,
     money: 0,
     area: 1,
     grid: 0,

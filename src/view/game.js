@@ -49,9 +49,13 @@ var SpaceLayer = cc.Layer.extend({
       }
       // ベジェ曲線の描画ロジック
       // draw.drawQuadBezier(cc.p(x, y), cc.p(x + (direction * 64), y + 64), cc.p(x, y + 128), 3, 10, cc.color(255, 0, 255, 255));
-
+      var color = spaceMaster[i].value >= 0 ? spaceColor['plus'] : spaceColor['minus'];
+      if (spaceMaster[i].type == 'goal' ||
+      spaceMaster[i].type == 'start') {
+        color = spaceColor[spaceMaster[i].type];
+      }
       draw.drawDot(cc.p(x, y), 40, cc.color(255, 0, 255, 255));
-      draw.drawDot(cc.p(x, y), 35, spaceColor[spaceMaster[i].type]);
+      draw.drawDot(cc.p(x, y), 35, color);
     }
   }
 });
@@ -193,7 +197,7 @@ var GameScene = cc.Scene.extend({
   isRightSelect: false,
   currentMap: "47",
   currentMapProgress: 0,
-  currentArea: "47_1",
+  currentArea: "47_20",
   currentAreaProgress: 0,
   ctor: function() {
     this._super();
@@ -273,12 +277,14 @@ var GameScene = cc.Scene.extend({
         }.bind(this));
         this.addChild(dialogLayer);
         this.stateMachine.switchTo(this.stateWaitJunction);
-      } else if (areaMaster.junctionType = "toOne") {
+      } else if (areaMaster.junctionType == "toOne") {
         if (this.playerLayer.getPosition().x > 0) {
           this.playerLayer.runAction(cc.moveBy(1, cc.p(-128, 0)))
         } else {
           this.playerLayer.runAction(cc.moveBy(1, cc.p(128, 0)))
         }
+        this.stateMachine.switchTo(this.stateForward);
+      } else {
         this.stateMachine.switchTo(this.stateForward);
       }
     } else {
