@@ -1,0 +1,24 @@
+dependencies: \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/cocos/editor-support/spine/Skeleton.c \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/Skeleton.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/SkeletonData.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/BoneData.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/SlotData.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/Skin.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/Attachment.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/EventData.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/Animation.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/Event.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/IkConstraintData.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/Slot.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/Bone.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/IkConstraint.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/extension.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/Atlas.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/AttachmentLoader.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/RegionAttachment.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/MeshAttachment.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/SkinnedMeshAttachment.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/BoundingBoxAttachment.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/AnimationState.h \
+  /Users/takahisa.nomura/proj/life/frameworks/js-bindings/cocos2d-x/build/../cocos/editor-support/spine/AnimationStateData.h

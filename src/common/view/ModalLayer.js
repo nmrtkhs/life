@@ -1,6 +1,6 @@
 var ModalLayer = cc.LayerColor.extend({
   _className: "ModalLayer",
-  _layer: null,
+  sprite: null,
 
   ctor: function() {
     this._super(cc.color(0, 0, 0, 255 * .75));
@@ -9,14 +9,17 @@ var ModalLayer = cc.LayerColor.extend({
 
   init: function() {
     var winSize = cc.director.getWinSize();
-    _layer = new cc.LayerColor(cc.color(238, 238, 238), winSize.width * .8, winSize.height * .3);
-    _layer.setAnchorPoint(0.5, 0.5);
-    _layer.setPosition(winSize.width / 2, winSize.height / 2);
-    _layer._ignoreAnchorPointForPosition = false;
-    this.addChild(_layer);
+    this.sprite = new cc.Scale9Sprite(res.BgGreen_png);
+    this.sprite.attr({
+        x: winSize.width / 2,
+        y: winSize.height / 2,
+    });
+    this.sprite.width = winSize.width * .8;
+    this.sprite.height = winSize.height * .3;
+    this.addChild(this.sprite);
   },
 
   getLayer: function() {
-    return _layer;
+    return this.sprite;
   },
 });

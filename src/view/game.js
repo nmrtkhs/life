@@ -170,7 +170,7 @@ var StatusLayer = cc.Layer.extend({
 
     var button = new ccui.Button();
     button.setTouchEnabled(true);
-    button.loadTextures("res/button_dice.png");
+    button.loadTextures("res/button_dice.png", "res/button_dice.png", "");
     button.setPosition(winSize.width - 60, 60);
     button.setScale(.5);
     // button.setContentSize(cc.size(10, 10));

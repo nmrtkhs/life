@@ -31,7 +31,7 @@ var DialogLayer = ModalLayer.extend({
     button.setTouchEnabled(true);
     button.setScale9Enabled(true);
 
-    button.loadTextures("res/button_red.png");
+    button.loadTextures("res/button_red.png", "res/button_red.png");
     button.setPosition(winSize.width / 2, winSize.height / 2 - 100);
     button.setContentSize(cc.size(winSize.width / 2, 50));
     button.setTitleFontSize(48);

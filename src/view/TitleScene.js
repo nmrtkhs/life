@@ -1,4 +1,3 @@
-
 var TitleLayer = cc.Layer.extend({
     sprite:null,
     startLabel: null,
@@ -52,7 +51,7 @@ function streamXHREventsToLabel (xhr, endCallback) {
 }
 
 var TitleScene = cc.Scene.extend({
-    isLoading: true,
+    isLoading: false,//test
     onEnter:function () {
         this._super();
 
