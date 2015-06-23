@@ -1,3 +1,7 @@
+var LAYER_BG = 1;
+var LAYER_PLAYER = 2;
+var LAYER_HUD = 3;
+
 var SpaceLayer = cc.Layer.extend({
   ctor:function(posX, posY, areaId)  {
     this._super();
@@ -35,7 +39,6 @@ var SpaceLayer = cc.Layer.extend({
 
           case "toOne":
             if (posX > 0) {
-              cc.log("toone");
               draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(255, 0, 255, 255));
             } else {
               draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(255, 0, 255, 255));
@@ -195,29 +198,23 @@ var GameScene = cc.Scene.extend({
   endBgProgressNum: 0,
   isSelect: false,
   isRightSelect: false,
-  currentMap: "47",
+  currentMap: "",
+  // currentMap: "47",
   currentMapProgress: 0,
   currentArea: "47_20",
   currentAreaProgress: 0,
+  mapSelectMap: {},
   ctor: function() {
     this._super();
     this.stateMachine = new StateMachine(this);
-    this.stateMachine.spawn(this.stateWaitInput);
-
-    var bgPos = 0;
-    _.each(TestData.MapMaster[this.currentMap], function(mapMaster) {
-      var bgLayer = new BgLayer(bgPos, mapMaster.areaIds);
-      bgPos += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
-      this.bgLayer.push(bgLayer);
-      this.addChild(bgLayer);
-    }.bind(this));
+    this.stateMachine.spawn(this.stateAreaSelectDialog);
 
     this.playerLayer = new PlayerLayer();
-    this.addChild(this.playerLayer);
+    this.addChild(this.playerLayer, LAYER_PLAYER);
 
     var statusLayer = new StatusLayer();
     statusLayer.updateTurn(30);
-    this.addChild(statusLayer);
+    this.addChild(statusLayer, LAYER_HUD);
 
     var listener = cc.eventManager.addListener({
       event: cc.EventListener.TOUCH_ONE_BY_ONE,
@@ -239,6 +236,103 @@ var GameScene = cc.Scene.extend({
   update: function(dt) {
     this.stateMachine.exec();
   },
+  stateAreaSelectDialog: function() {
+    if (this.currentMap == "") {
+      var dialogText = "";
+      for (var i = 1; i <= 6; ++i) {
+        var mapId = Object.keys(TestData.MapMaster)[_.random(1, TestData.MapMaster.length)];
+        this.mapSelectMap[i] = mapId;
+        dialogText += i + ":" + TestData.PrefecturesMaster[mapId].name;
+        if (i % 2 == 0) {
+          dialogText += "\n";
+        } else {
+          dialogText += "  ";
+        }
+      }
+      this.isSelect = false;
+      var dialogLayer = new DialogLayer( dialogText , function(){
+        this.isSelect = true;
+      }.bind(this));
+      this.addChild(dialogLayer, LAYER_HUD);
+      this.stateMachine.switchTo(this.stateWaitAreaSelectDialog);
+    } else {
+      this.stateMachine.switchTo(this.stateJobSelect);
+    }
+  },
+  stateWaitAreaSelectDialog: function() {
+    if (this.isSelect) {
+      this.isSelect = false;
+      eventQueue.clear();
+      this.stateMachine.switchTo(this.stateWaitInputArea);
+    }
+  },
+  stateWaitInputArea: function() {
+    while (event = eventQueue.dequeue()) {
+      switch (event) {
+        case 'tapDice':
+          var diceResult = _.random(1, 6);
+          this.currentMap = this.mapSelectMap[diceResult];
+          this.currentMap = "47";//todo
+          var dialogLayer = new DialogLayer( TestData.PrefecturesMaster[this.currentMap].name + "に決定", function(){
+            this.isSelect = true;
+          }.bind(this));
+          this.addChild(dialogLayer, LAYER_HUD);
+          this.stateMachine.switchTo(this.stateWaitAreaDecide);
+          return;
+        default:
+        break;
+      }
+    }
+  },
+  stateWaitAreaDecide: function() {
+    if (this.isSelect) {
+      this.isSelect = false;
+      this.stateMachine.switchTo(this.stateJobSelect);
+    }
+  },
+  stateJobSelect: function() {
+    if (Object.keys(TestData.UserData.job).length == 0)  {
+      cc.loader.loadJs("src/vendor/parse-1.4.2.min.js", function(err){
+          if(err) return console.log("load failed");
+          //success
+          Parse.localStorage = cc.sys.localStorage
+          Parse.initialize("mSG7zu4TcARzR3oyRADDXA2ShP6l7Kw5XigzNjUt", "Fqu944VkhOEZaUsM80Me97rcpKvNuD4kfUCTHsRB");
+
+          var TestObject = Parse.Object.extend("TestObject");
+          var testObject = new TestObject();
+          testObject.save({foo: "bar"}).then(function(object) {
+              cc.log("yay! it worked");
+          });
+
+          // Parse.Cloud.run('hello', {spc: "001" + this.currentArea}, {
+          Parse.Cloud.run('hello', {spc: "001" + this.currentArea}, {
+            success: function(result) {
+              cc.log(result);
+            },
+            error: function(error) {
+            }
+        });
+      });
+
+      this.stateMachine.switchTo(this.stateWaitJobSelect);
+    } else {
+      eventQueue.clear();
+      this.stateMachine.switchTo(this.stateSetBgLayer);
+    }
+  },
+  stateWaitJobSelect: function() {
+    this.stateMachine.switchTo(this.stateSetBgLayer);
+  },
+  stateSetBgLayer: function() {
+    var bgPos = 0;
+    _.each(TestData.MapMaster[this.currentMap], function(mapMaster) {
+      var bgLayer = new BgLayer(bgPos, mapMaster.areaIds);
+      bgPos += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
+      this.bgLayer.push(bgLayer);
+      this.addChild(bgLayer, LAYER_BG);
+    }.bind(this));
+    this.stateMachine.switchTo(this.stateWaitInput);
+  },
   stateWaitInput: function() {
     while (event = eventQueue.dequeue()) {
       switch (event) {
@@ -249,7 +343,7 @@ var GameScene = cc.Scene.extend({
             this.endBgProgress = 0;
             this.isSelect = true;
           }.bind(this));
-          this.addChild(dialogLayer);
+          this.addChild(dialogLayer, LAYER_HUD);
           this.stateMachine.switchTo(this.stateConfirmProgress);
           return;
         default:
@@ -275,7 +369,7 @@ var GameScene = cc.Scene.extend({
         function() {
           this.isSelect = true;
         }.bind(this));
-        this.addChild(dialogLayer);
+        this.addChild(dialogLayer, LAYER_HUD);
         this.stateMachine.switchTo(this.stateWaitJunction);
       } else if (areaMaster.junctionType == "toOne") {
         if (this.playerLayer.getPosition().x > 0) {
@@ -333,7 +427,7 @@ var GameScene = cc.Scene.extend({
         var dialogLayer = new DialogLayer("おめでとう！！ゴールしました", function(){
           this.isSelect = true;
         }.bind(this));
-        this.addChild(dialogLayer);
+        this.addChild(dialogLayer, LAYER_HUD);
         this.stateMachine.switchTo(this.stateEnd);
         return;
       }
@@ -349,7 +443,7 @@ var GameScene = cc.Scene.extend({
     var dialogLayer = new DialogLayer(TestData.SpaceMaster[this.currentArea][this.currentAreaProgress].description, function(){
       this.isSelect = true;
     }.bind(this));
-    this.addChild(dialogLayer);
+    this.addChild(dialogLayer, LAYER_HUD);
     this.stateMachine.switchTo(this.stateWaitEvent);
   },
   stateWaitEvent: function() {

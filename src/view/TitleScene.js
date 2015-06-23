@@ -51,7 +51,7 @@ function streamXHREventsToLabel (xhr, endCallback) {
 }
 
 var TitleScene = cc.Scene.extend({
-    isLoading: false,//test
+    isLoading: true,
     onEnter:function () {
         this._super();
 

@@ -9,7 +9,7 @@ var ModalLayer = cc.LayerColor.extend({
 
   init: function() {
     var winSize = cc.director.getWinSize();
-    this.sprite = new cc.Scale9Sprite(res.BgGreen_png);
+    this.sprite = new cc.Scale9Sprite(res.BgDialog_png);
     this.sprite.attr({
         x: winSize.width / 2,
         y: winSize.height / 2,
