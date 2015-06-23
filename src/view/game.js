@@ -305,14 +305,16 @@ var GameScene = cc.Scene.extend({
           });
 
           // Parse.Cloud.run('hello', {spc: "001" + this.currentArea}, {
-          Parse.Cloud.run('hello', {spc: "001" + this.currentArea}, {
+          var areaCode = "0" + this.currentMap;
+          cc.log(areaCode);
+          Parse.Cloud.run('hello', {spc: areaCode}, {
             success: function(result) {
               cc.log(result);
             },
             error: function(error) {
             }
-        });
-      });
+          });
+      }.bind(this));
 
       this.stateMachine.switchTo(this.stateWaitJobSelect);
     } else {
