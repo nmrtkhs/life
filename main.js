@@ -64,8 +64,8 @@ cc.game.onStart = function(){
     //load resources
     eventQueue = new Queue();
     cc.LoaderScene.preload(g_resources, function () {
-        cc.director.runScene(new TitleScene());
-        // cc.director.runScene(new GameScene());
+//        cc.director.runScene(new TitleScene());
+         cc.director.runScene(new GameScene());
     }, this);
 };
 cc.game.run();
