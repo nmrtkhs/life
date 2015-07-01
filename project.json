@@ -22,6 +22,8 @@
         "src/test/testData.js",
         "src/common/view/ModalLayer.js",
         "src/view/DialogLayer.js",
+        "src/view/RouletteNode.js",
+        "src/view/RouletteLayer.js",
         "src/view/DialogSelectLayer.js",
         "src/view/InputNameLayer.js",
         "src/view/TitleScene.js",

@@ -173,9 +173,9 @@ var StatusLayer = cc.Layer.extend({
 
     var button = new ccui.Button();
     button.setTouchEnabled(true);
-    button.loadTextures("res/button_dice.png", "res/button_dice.png", "");
-    button.setPosition(winSize.width - 60, 60);
-    button.setScale(.5);
+    button.loadTextures("res/roulette_6.png", "res/roulette_6.png", "");
+    button.setPosition(winSize.width - 65, 65);
+    button.setScale(.25);
     // button.setContentSize(cc.size(10, 10));
     button.addTouchEventListener(function(){
       eventQueue.enqueue("tapDice");
@@ -203,6 +203,7 @@ var GameScene = cc.Scene.extend({
   currentMapProgress: 0,
   currentArea: "47_20",
   currentAreaProgress: 0,
+  rouletteResult: -1,
   mapSelectMap: {},
   ctor: function() {
     this._super();
@@ -263,25 +264,25 @@ var GameScene = cc.Scene.extend({
     if (this.isSelect) {
       this.isSelect = false;
       eventQueue.clear();
-      this.stateMachine.switchTo(this.stateWaitInputArea);
+      this.stateMachine.switchTo(this.stateRoulete);
     }
   },
-  stateWaitInputArea: function() {
-    while (event = eventQueue.dequeue()) {
-      switch (event) {
-        case 'tapDice':
-          var diceResult = _.random(1, 6);
-          this.currentMap = this.mapSelectMap[diceResult];
-          this.currentMap = "47";//todo
-          var dialogLayer = new DialogLayer( TestData.PrefecturesMaster[this.currentMap].name + "に決定", function(){
-            this.isSelect = true;
-          }.bind(this));
-          this.addChild(dialogLayer, LAYER_HUD);
-          this.stateMachine.switchTo(this.stateWaitAreaDecide);
-          return;
-        default:
-        break;
-      }
+  stateRoulete: function() {
+    var rouletteLayer = new RouletteLayer(function(rouletteResult){
+      this.rouletteResult = rouletteResult;
+    }.bind(this));
+    this.addChild(rouletteLayer);
+    this.stateMachine.switchTo(this.stateWaitRoulette);
+  },
+  stateWaitRoulette: function() {
+    if (this.rouletteResult > 0) {
+      this.currentMap = this.mapSelectMap[this.rouletteResult];
+      this.currentMap = "47";//todo
+      var dialogLayer = new DialogLayer( TestData.PrefecturesMaster[this.currentMap].name + "に決定", function(){
+        this.isSelect = true;
+      }.bind(this));
+      this.addChild(dialogLayer, LAYER_HUD);
+      this.stateMachine.switchTo(this.stateWaitAreaDecide);
     }
   },
   stateWaitAreaDecide: function() {
