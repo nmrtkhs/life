@@ -1,11 +1,11 @@
-var DialogLayer = ModalLayer.extend({
+var DialogMultiSelectLayer = ModalLayer.extend({
   _className: "DialogLayer",
   _box: null,
 
   ctor: function(message, onCallback) {
     this._super();
     cc.associateWithNative(this, cc.Layer);
-    DialogLayer.prototype.init.call(this, message, onCallback);
+    DialogMultiSelectLayer.prototype.init.call(this, message, onCallback);
   },
 
   init: function(message, onCallback) {
@@ -33,13 +33,12 @@ var DialogLayer = ModalLayer.extend({
 
     button.loadTextures("res/button_red.png", "res/button_red.png");
     button.setPosition(winSize.width / 2, winSize.height / 2 - 100);
-    button.setContentSize(cc.size(winSize.width / 2, 50));
+    button.setContentSize(cc.size(winSize.width / 2 + 100, 50));
     button.setTitleFontSize(48);
     button.addTouchEventListener(function(){
       onCallback();
-      this.removeFromParent();
     } ,this);
-    button.setTitleText("OK");
+    button.setTitleText("ルーレットを回す");
     this.addChild(button);
   },
 });

@@ -24,9 +24,13 @@
         "src/view/DialogLayer.js",
         "src/view/RouletteNode.js",
         "src/view/RouletteLayer.js",
+        "src/view/DialogMultiSelectLayer.js",
         "src/view/DialogSelectLayer.js",
         "src/view/InputNameLayer.js",
-        "src/view/TitleScene.js",
-        "src/view/game.js"
+        "src/view/SpaceLayer.js",
+        "src/view/GameBgLayer.js",
+        "src/view/PlayerLayer.js",
+        "src/view/StatusLayer.js",
+        "src/view/GameScene.js"
     ]
 }

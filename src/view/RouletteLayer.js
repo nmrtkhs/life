@@ -6,22 +6,22 @@ var RouletteLayer = cc.LayerColor.extend({
   isSkip: false,
   onCallback: null,
 
-  ctor: function(onCallback) {
+  ctor: function(onCallback, division) {
     this._super(cc.color(0, 0, 0, 255 * .75));
     this.onCallback = onCallback;
-    RouletteLayer.prototype.init.call(this);
+    RouletteLayer.prototype.init.call(this, division);
   },
   
   update: function(dt) {
     this.stateMachine.exec();
   },
 
-  init: function() {
+  init: function(division) {
     var winSize = cc.director.getWinSize();
 
     var blockSize = cc.size(400, 400);
 
-    this.rouletteNode = new RouletteNode(6);
+    this.rouletteNode = new RouletteNode(division);
     this.addChild(this.rouletteNode, 0);
     
     var listener = cc.eventManager.addListener({

@@ -35,7 +35,7 @@ var RouletteNode = cc.Node.extend({
     cc.log(this.resultNum);
     cc.log(this.resultAngle);
     var actionFirst = cc.rotateTo(1, 360 * 3);
-    var actionSecond = cc.rotateTo(1.5, 360 + this.resultAngle).easing(cc.easeOut(1.5));
+    var actionSecond = cc.rotateTo(1.5, 360 + this.resultAngle).easing(cc.easeOut(3));
     this.sprite.runAction(cc.sequence(actionFirst, actionSecond, cc.callFunc(function() {
       this.spinEndCallback(this.resultNum);
     }, this)));
