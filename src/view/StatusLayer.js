@@ -47,14 +47,6 @@ var StatusLayer = cc.Layer.extend({
     this.nameLabel.y = winSize.height - blockSize.height;
     this.addChild(this.nameLabel);
 
-    var bottomPoints = [
-      cc.p(0, 0),
-      cc.p(winSize.width, 0),
-      cc.p(winSize.width, 100),
-      cc.p(0, 100),
-    ];
-    draw.drawPoly(bottomPoints, cc.color(255,0,0,128), 8, cc.color(0,128,128,255));
-
     var button = new ccui.Button();
     button.setTouchEnabled(true);
     button.loadTextures("res/roulette_6.png", "res/roulette_6.png", "");

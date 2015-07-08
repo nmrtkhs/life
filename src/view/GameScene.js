@@ -1,10 +1,12 @@
 var LAYER_BG = 1;
-var LAYER_PLAYER = 2;
-var LAYER_HUD = 3;
+var LAYER_SPACE = 2;
+var LAYER_PLAYER = 3;
+var LAYER_HUD = 4;
 
 var GameScene = cc.Scene.extend({
   stateMachine: null,
-  bgLayer: [],
+  bgLayers: [],
+  spaceLayers: [],
   playerLayer: null,
   remainingStep: 0,
   endBgProgressNum: 0,
@@ -191,10 +193,24 @@ var GameScene = cc.Scene.extend({
   stateSetBgLayer: function() {
     var bgPos = 0;
     _.each(TestData.MapMaster[this.currentMap], function(mapMaster) {
-      var bgLayer = new BgLayer(bgPos, mapMaster.areaIds);
+      var bgLayer = new GameBgLayer(bgPos, mapMaster.areaIds);
       bgPos += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
-      this.bgLayer.push(bgLayer);
+      this.bgLayers.push(bgLayer);
       this.addChild(bgLayer, LAYER_BG);
+    }.bind(this));
+    var spacePosY = 0;
+    _.each(TestData.MapMaster[this.currentMap], function(mapMaster) {
+      _.each(mapMaster.areaIds, function(areaId, areaKey) {
+        var posX = 0;
+        if (mapMaster.areaIds.length >= 2) {
+          posX = areaKey == 0 ? -128 : 128;
+        }
+        cc.log(spacePosY);
+        var spaceLayer = new SpaceLayer(posX, spacePosY, areaId);
+        this.spaceLayers.push(spaceLayer);
+        this.addChild(spaceLayer, LAYER_SPACE);
+      }.bind(this));
+      spacePosY += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
     }.bind(this));
     this.stateMachine.switchTo(this.stateWaitInput);
   },
@@ -270,7 +286,7 @@ var GameScene = cc.Scene.extend({
       var areaInfo = TestData.MapMaster[this.currentMap][this.currentMapProgress];
       this.currentArea = areaInfo.areaIds[0];
     }
-    _.each(this.bgLayer, function(bgLayer){
+    _.each(this.bgLayers, function(bgLayer){
       // bgLayer.forward(progress);
       var sequence = cc.sequence(
         cc.moveBy(1, cc.p(0, -128)),
@@ -280,12 +296,15 @@ var GameScene = cc.Scene.extend({
       );
       bgLayer.runAction(sequence);
     }.bind(this));
+    _.each(this.spaceLayers, function(spaceLayer){
+      spaceLayer.runAction(cc.moveBy(1, cc.p(0, -128)));
+    });
 
     this.stateMachine.switchTo(this.stateForwarding);
   },
   stateForwarding: function() {
     // 全てのアニメが完了
-    if (this.endBgProgressNum == this.bgLayer.length) {
+    if (this.endBgProgressNum == this.bgLayers.length) {
       this.endBgProgressNum = 0;
       if (TestData.SpaceMaster[this.currentArea][this.currentAreaProgress].type == "goal") {
         var dialogLayer = new DialogLayer("おめでとう！！ゴールしました", function(){
