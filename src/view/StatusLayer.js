@@ -14,6 +14,19 @@ var StatusLayer = cc.Layer.extend({
       cc.p(0, winSize.height - 100),
     ];
     draw.drawPoly(topPoints, cc.color(255,0,0,128), 8, cc.color(0,128,128,255));
+    var topRect = cc.rect(0, winSize.height - 100, winSize.width, 100);
+    cc.log(topRect);
+    var listener = cc.eventManager.addListener({
+      event: cc.EventListener.TOUCH_ONE_BY_ONE,
+      onTouchBegan: function(touch, event) {
+          return true;
+      },
+      onTouchEnded: function(touch, event) {
+        if (cc.rectContainsPoint(topRect, touch.getLocation())) {
+          eventQueue.enqueue("tapStatus");
+        }
+      }.bind(this),
+    }, this);
 
     var blockSize = cc.size(100, 100);
 

@@ -5,6 +5,7 @@ var LAYER_HUD = 4;
 
 var GameScene = cc.Scene.extend({
   stateMachine: null,
+  chartLayer: null,
   bgLayers: [],
   spaceLayers: [],
   playerLayer: null,
@@ -224,11 +225,27 @@ var GameScene = cc.Scene.extend({
           }.bind(this), 6);
           this.addChild(rouletteLayer, LAYER_HUD);
           this.stateMachine.switchTo(this.stateWaitSpaceRoulette);
-          return;
+          break;
+        case 'tapStatus':
+          // todo statusChartLayerを表示する
+          this.chartLayer = new ChartLayer(function() {
+            this.removeChild(this.chartLayer);
+            this.chartLayer = null;
+          }.bind(this));
+          this.addChild(this.chartLayer, LAYER_HUD);
+          this.stateMachine.switchTo(this.stateWaitChartLayer);
+          break;
         default:
         break;
       }
     }
+  },
+  stateWaitChartLayer: function() {
+    if (this.chartLayer != null) {
+      return;
+    }
+    eventQueue.clear();
+    this.stateMachine.switchTo(this.stateWaitInput);
   },
   stateWaitSpaceRoulette: function() {
     if (this.rouletteResult <= 0) {
