@@ -54,6 +54,12 @@ var InputNameLayer = ModalLayer.extend({
     // ログイン有無の確認（Boolean値が返ります）
 if(Parse.User.current()){
 cc.log("ログイン済");
+    var UserData = Parse.Object.extend("UserData");
+    var userData = new UserData();
+    cc.log(userData);
+    userData.set("createdBy", Parse.User.current());
+    userData.set("moeny", 1);
+    userData.save();
     // ログイン済
 }else{
 cc.log("みログイン");
