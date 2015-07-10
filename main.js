@@ -63,9 +63,14 @@ cc.game.onStart = function(){
   
     //load resources
     eventQueue = new Queue();
+  
+    // parse init
+    Parse.localStorage = cc.sys.localStorage
+    Parse.initialize("mSG7zu4TcARzR3oyRADDXA2ShP6l7Kw5XigzNjUt", "Fqu944VkhOEZaUsM80Me97rcpKvNuD4kfUCTHsRB");
+  
     cc.LoaderScene.preload(g_resources, function () {
-//        cc.director.runScene(new TitleScene());
-         cc.director.runScene(new GameScene());
+        cc.director.runScene(new TitleScene());
+//         cc.director.runScene(new GameScene());
     }, this);
 };
 cc.game.run();

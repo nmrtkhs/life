@@ -19,6 +19,7 @@ var res = {
     Roulette_9_png: "res/roulette_9.png",
     Roulette_10_png: "res/roulette_10.png",
     Chart_png: "res/chart.png",
+    Loading_Indicator_png: "res/loading_indicator.png",
 };
 
 var g_resources = [];

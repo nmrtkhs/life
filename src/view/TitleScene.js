@@ -85,9 +85,16 @@ var TitleScene = cc.Scene.extend({
           }.bind(this),
         }, this);
 
+        //TODO
+        this.isLoading = false;
+//        var loadingIndicatorLayer = new LoadingIndicatorLayer();
+//        cc.eventManager.pauseTarget(this, true);
+//        this.addChild(loadingIndicatorLayer);
         var xhr = cc.loader.getXMLHttpRequest();
         streamXHREventsToLabel(xhr, function(responseText) {
           this.isLoading = false;
+//          this.removeChild(loadingIndicatorLayer);
+//          cc.eventManager.resumeTarget(this, true);
           layer.changeStartLabel("Tap Start");
           var responseJson = JSON.parse(responseText);
           _.each(responseJson, function(value, key) {
