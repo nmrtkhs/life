@@ -23,3 +23,17 @@ var LoadingIndicatorLayer = cc.LayerColor.extend({
     this.addChild(this.sprite);
   }
 });
+var LoadingIndicator = {
+  layer: null,
+  that: null,
+  show: function(that) {
+    this.that = that;
+    this.layer = new LoadingIndicatorLayer();
+    cc.eventManager.pauseTarget(that, true);
+    that.addChild(this.layer);
+  },
+  hide: function() {
+    this.that.removeChild(this.layer);
+    cc.eventManager.resumeTarget(this.that, true);
+  }
+};

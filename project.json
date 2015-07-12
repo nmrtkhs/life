@@ -20,6 +20,7 @@
         "src/lib/statemachine.js",
         "src/lib/queue.js",
         "src/test/testData.js",
+        "src/common/ErrorMessage.js",
         "src/common/view/ModalLayer.js",
         "src/view/LoadingIndicatorLayer.js",
         "src/view/DialogLayer.js",

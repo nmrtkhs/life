@@ -10,8 +10,7 @@ var TitleLayer = cc.Layer.extend({
         startLabel.x = size.width / 2;
         startLabel.y = size.height / 2 - 200;
 
-        // 後でblinkじゃなく通常のactionで実装する
-        startLabel.runAction(cc.blink(30, 30));
+        startLabel.runAction(cc.blink(1, 1).repeatForever());
         this.addChild(startLabel, 5);
 
         // add "startWorld" splash screen"
@@ -69,10 +68,10 @@ var TitleScene = cc.Scene.extend({
             }
             // 何度もおせないように一度押したらアクションを無効化する
             cc.eventManager.removeListener(listener);
-            var modal = new InputNameLayer(function(name) {
+            
+            var gameStart = function(name) {
               this.removeChild(layer);
               TestData.UserData.name = name;
-              modal.removeFromParent();
               var delay = cc.delayTime(0.5);
               var startGame = cc.callFunc(function() {
                 var scene = new GameScene();
@@ -80,21 +79,24 @@ var TitleScene = cc.Scene.extend({
                 cc.director.runScene(transition);
               }, this);
               this.runAction(cc.sequence(delay, startGame));
-            }.bind(this));
-            this.addChild(modal);
+            }.bind(this);
+           
+            if (Parse.User.current()) {
+              gameStart(Parse.User.current().attributes.username);
+            } else {
+              var modal = new InputNameLayer(function(name) {
+                modal.removeFromParent();
+                gameStart(name);
+              }.bind(this));
+              this.addChild(modal);
+            }
           }.bind(this),
         }, this);
 
         //TODO
         this.isLoading = false;
-//        var loadingIndicatorLayer = new LoadingIndicatorLayer();
-//        cc.eventManager.pauseTarget(this, true);
-//        this.addChild(loadingIndicatorLayer);
-        var xhr = cc.loader.getXMLHttpRequest();
         streamXHREventsToLabel(xhr, function(responseText) {
           this.isLoading = false;
-//          this.removeChild(loadingIndicatorLayer);
-//          cc.eventManager.resumeTarget(this, true);
           layer.changeStartLabel("Tap Start");
           var responseJson = JSON.parse(responseText);
           _.each(responseJson, function(value, key) {

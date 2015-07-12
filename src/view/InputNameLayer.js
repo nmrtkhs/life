@@ -2,6 +2,7 @@ var InputNameLayer = ModalLayer.extend({
   _className: "InputNameLayer",
   userNameBox: null,
   passwordBox: null,
+  isDialog: false,
 
   ctor: function(onCallback) {
     this._super();
@@ -56,7 +57,8 @@ if(Parse.User.current()){
 cc.log("ログイン済");
     var UserData = Parse.Object.extend("UserData");
     var userData = new UserData();
-    cc.log(userData);
+//    cc.log(userData.);
+    cc.log(Parse.User.current().attributes.username);
     userData.set("createdBy", Parse.User.current());
     userData.set("moeny", 1);
     userData.save();
@@ -69,17 +71,19 @@ cc.log("みログイン");
       var userName = this.userNameBox.getString();
       var password = this.passwordBox.getString();
       Parse.User.logOut();
-      if (!clicked && userName !== "" && password !== "") {
-        clicked = true;
-//        onCallback(this.userNameBox.getString());
+      if (!this.isDialog && userName !== "" && password !== "") {
+        LoadingIndicator.show(this);
+        var that = this;
         Parse.User.logIn(userName, password, {
           success: function(user){
               // ログイン成功
-cc.log("ログイン成功");
+            LoadingIndicator.hide();
+            onCallback(that.userNameBox.getString());
           },
           error: function(user, error){
               // ログイン失敗
-cc.log("ログイン失敗");
+            LoadingIndicator.hide();
+            that.showErrorDialog(error);
           }
         });
       }
@@ -94,25 +98,23 @@ cc.log("ログイン失敗");
     signUpButton.setPosition(winSize.width / 2 + 120, winSize.height / 2 - 150);
     signUpButton.setContentSize(cc.size(winSize.width / 3, 50));
     signUpButton.setTitleFontSize(48);
-    var clicked = false;
     signUpButton.addTouchEventListener(function(){
       var userName = this.userNameBox.getString();
       var password = this.passwordBox.getString();
-      if (!clicked && userName !== "" && password !== "") {
+      if (!this.isDialog && userName !== "" && password !== "") {
         var user = new Parse.User();
         user.set("username", userName);
         user.set("password", password);
         
-        clicked = true;
-//        onCallback(this.userNameBox.getString());
+        LoadingIndicator.show(this);
+        var that = this;
         user.signUp(null, {
           success: function(user){
-              // サインアップ成功
-              cc.log("成功");
+            onCallback(that.userNameBox.getString());
           },
           error: function(user, error){
-              // サインアップ失敗
-              cc.log("失敗");
+            LoadingIndicator.hide();
+            that.showErrorDialog(error);
           }
         });
       }
@@ -120,23 +122,20 @@ cc.log("ログイン失敗");
     signUpButton.setTitleText("新規登録");
     this.addChild(signUpButton);
   },
-
-  okClick: function (sender, type) {
-    switch (type) {
-      // case ccui.Widget.TOUCH_BEGAN:
-      //     this._topDisplayLabel.setString("Touch Down");
-      //     break;
-      // case ccui.Widget.TOUCH_MOVED:
-      //     this._topDisplayLabel.setString("Touch Move");
-      //     break;
-      case ccui.Widget.TOUCH_ENDED:
-          break;
-      // case ccui.Widget.TOUCH_CANCELED:
-      //     this._topDisplayLabel.setString("Touch Cancelled");
-      //     break;
-
-      default:
-          break;
+  
+  showErrorDialog: function(error) {
+    this.isDialog = true;
+    this.userNameBox.setVisible(false);
+    this.passwordBox.setVisible(false);
+    var message = ErrorMessage.Parse[error.code];
+    if (message === 'undefined') {
+      message = error.message;
     }
+    var dialogLayer = new DialogLayer(message, function(){
+        this.isDialog = false;
+        this.userNameBox.setVisible(true);
+        this.passwordBox.setVisible(true);
+    }.bind(this));
+    this.addChild(dialogLayer);
   },
 });
