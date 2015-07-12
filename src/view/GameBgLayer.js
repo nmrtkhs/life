@@ -11,7 +11,8 @@ var GameBgLayer = cc.Layer.extend({
         x: size.width / 2,
         y: size.height / 2 + posY
     });
-    this.sprite.setScale(size.height / this.sprite.getContentSize().height);
+    this.sprite.setScaleX(size.width / this.sprite.getContentSize().width);
+    this.sprite.setScaleY(size.height / this.sprite.getContentSize().height);
     this.addChild(this.sprite);
 
     return true;

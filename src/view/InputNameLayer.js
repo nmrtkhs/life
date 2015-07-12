@@ -51,37 +51,18 @@ var InputNameLayer = ModalLayer.extend({
     signInButton.setPosition(winSize.width / 2 - 120, winSize.height / 2 - 150);
     signInButton.setContentSize(cc.size(winSize.width / 3, 50));
     signInButton.setTitleFontSize(48);
-    var clicked = false;
-    // ログイン有無の確認（Boolean値が返ります）
-if(Parse.User.current()){
-cc.log("ログイン済");
-    var UserData = Parse.Object.extend("UserData");
-    var userData = new UserData();
-//    cc.log(userData.);
-    cc.log(Parse.User.current().attributes.username);
-    userData.set("createdBy", Parse.User.current());
-    userData.set("moeny", 1);
-    userData.save();
-    // ログイン済
-}else{
-cc.log("みログイン");
-    // 未ログイン
-}
     signInButton.addTouchEventListener(function(){
       var userName = this.userNameBox.getString();
       var password = this.passwordBox.getString();
-      Parse.User.logOut();
       if (!this.isDialog && userName !== "" && password !== "") {
         LoadingIndicator.show(this);
         var that = this;
         Parse.User.logIn(userName, password, {
           success: function(user){
-              // ログイン成功
             LoadingIndicator.hide();
             onCallback(that.userNameBox.getString());
           },
           error: function(user, error){
-              // ログイン失敗
             LoadingIndicator.hide();
             that.showErrorDialog(error);
           }
@@ -110,6 +91,17 @@ cc.log("みログイン");
         var that = this;
         user.signUp(null, {
           success: function(user){
+            user.set("createdBy", user);
+            user.set("housing", 0);
+            user.set("income", 0);
+            user.set("education", 0);
+            user.set("environment", 0);
+            user.set("health", 0);
+            user.set("money", 0);
+            user.set("turn", 0);
+            user.set("mapProgress", 0);
+            user.set("areaProgress", 0);
+            user.save();
             onCallback(that.userNameBox.getString());
           },
           error: function(user, error){

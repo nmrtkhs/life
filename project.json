@@ -34,6 +34,7 @@
         "src/view/PlayerLayer.js",
         "src/view/ChartLayer.js",
         "src/view/StatusLayer.js",
+        "src/view/MenuLayer.js",
         "src/view/TitleScene.js",
         "src/view/GameScene.js"
     ]

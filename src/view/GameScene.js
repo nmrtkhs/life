@@ -6,6 +6,8 @@ var LAYER_HUD = 4;
 var GameScene = cc.Scene.extend({
   stateMachine: null,
   chartLayer: null,
+  gameLayer: null,
+  menuLayer: null,
   bgLayers: [],
   spaceLayers: [],
   playerLayer: null,
@@ -13,25 +15,42 @@ var GameScene = cc.Scene.extend({
   endBgProgressNum: 0,
   isSelect: false,
   isRightSelect: false,
-  currentMap: "",
+  isMenuTransition: false,
+//  currentMap: "",
   // currentMap: "47",
   currentMapProgress: 0,
   currentArea: "47_20",
   currentAreaProgress: 0,
   rouletteResult: -1,
   multiSelctDialogLyaer: null,
+  user: null,
   areaDivision: {},
   ctor: function() {
     this._super();
     this.stateMachine = new StateMachine(this);
     this.stateMachine.spawn(this.stateAreaSelectDialog);
 
+    this.gameLayer = new cc.Layer();
+    this.addChild(this.gameLayer);
+    
+    this.menuLayer = new MenuLayer();
+    this.addChild(this.menuLayer);
+    this.menuLayer.setVisible(false);
+    this.menuLayer.setPosition(640, 0);
+    
     this.playerLayer = new PlayerLayer();
-    this.addChild(this.playerLayer, LAYER_PLAYER);
+    this.gameLayer.addChild(this.playerLayer, LAYER_PLAYER);
 
     var statusLayer = new StatusLayer();
     statusLayer.updateTurn(30);
-    this.addChild(statusLayer, LAYER_HUD);
+    this.gameLayer.addChild(statusLayer, LAYER_HUD);
+    
+    this.user = Parse.User.current();
+    Parse
+    this.currentAreaProgress = this.user.get('areaProgress');
+    this.currentMapProgress = this.user.get('mapProgress');
+    cc.log(this.currentAreaProgress);
+    cc.log(this.currentMapProgress);
 
     var listener = cc.eventManager.addListener({
       event: cc.EventListener.TOUCH_ONE_BY_ONE,
@@ -53,8 +72,29 @@ var GameScene = cc.Scene.extend({
   update: function(dt) {
     this.stateMachine.exec();
   },
+  showMenu: function() {
+    this.isMenuTransition = true;
+    this.gameLayer.runAction(
+      cc.sequence(
+        cc.moveBy(.3, cc.p(-500, 0)).easing(cc.easeIn(.3)),
+        cc.callFunc(function() {this.isMenuTransition = false;}, this)
+      )
+    );
+    this.menuLayer.setVisible(true);
+    this.menuLayer.runAction(cc.moveBy(.3, cc.p(-500, 0)).easing(cc.easeIn(.3)));
+  },
+  hideMenu: function() {
+    this.isMenuTransition = true;
+    this.gameLayer.runAction(
+      cc.sequence(
+        cc.moveBy(.3, cc.p(500, 0)).easing(cc.easeIn(.3)),
+        cc.callFunc(function() {this.isMenuTransition = false;}, this)
+      )
+    );
+    this.menuLayer.runAction(cc.moveBy(.3, cc.p(500, 0)).easing(cc.easeIn(.3)));
+  },
   stateAreaSelectDialog: function() {
-    if (this.currentMap == "") {
+    if (this.user.get('area') === undefined) {
       var dialogText = "地域を選択します\n";
       var areaDivisionKeys = Object.keys(TestData.AreaDivisionMaster);
       for (var i = 0; i < areaDivisionKeys.length; ++i) {
@@ -99,7 +139,6 @@ var GameScene = cc.Scene.extend({
       return;
     }
     this.areaDivision = TestData.AreaDivisionMaster[this.rouletteResult];
-    cc.log(this.areaDivision);
     this.removeChild(this.multiSelectDialogLayer);
     this.prefectures = this.areaDivision.prefectures;
     var dialogText = "都道府県を選択します\n";
@@ -143,6 +182,9 @@ var GameScene = cc.Scene.extend({
     this.removeChild(this.multiSelectDialogLayer);
 //    this.currentMap = this.prefectures[this.rouletteResult-1];
     this.currentMap = "47";//todo
+    this.user.set('map', "47")//todo:
+    this.user.set('area', TestData.MapMaster["47"][0].areaIds[0]);
+    this.user.save();
     var dialogLayer = new DialogLayer( TestData.PrefecturesMaster[this.currentMap].name + "に決定", function(){
       this.isSelect = true;
     }.bind(this));
@@ -164,18 +206,16 @@ var GameScene = cc.Scene.extend({
           Parse.localStorage = cc.sys.localStorage
           Parse.initialize("mSG7zu4TcARzR3oyRADDXA2ShP6l7Kw5XigzNjUt", "Fqu944VkhOEZaUsM80Me97rcpKvNuD4kfUCTHsRB");
 
-          var TestObject = Parse.Object.extend("TestObject");
-          var testObject = new TestObject();
-          testObject.save({foo: "bar"}).then(function(object) {
-              cc.log("yay! it worked");
-          });
+//          var TestObject = Parse.Object.extend("TestObject");
+//          var testObject = new TestObject();
+//          testObject.save({foo: "bar"}).then(function(object) {
+//              cc.log("yay! it worked");
+//          });
 
           // Parse.Cloud.run('hello', {spc: "001" + this.currentArea}, {
           var areaCode = "0" + this.currentMap;
-          cc.log(areaCode);
           Parse.Cloud.run('hello', {spc: areaCode}, {
             success: function(result) {
-              cc.log(result);
             },
             error: function(error) {
             }
@@ -192,26 +232,42 @@ var GameScene = cc.Scene.extend({
     this.stateMachine.switchTo(this.stateSetBgLayer);
   },
   stateSetBgLayer: function() {
-    var bgPos = 0;
-    _.each(TestData.MapMaster[this.currentMap], function(mapMaster) {
-      var bgLayer = new GameBgLayer(bgPos, mapMaster.areaIds);
-      bgPos += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
-      this.bgLayers.push(bgLayer);
-      this.addChild(bgLayer, LAYER_BG);
-    }.bind(this));
-    var spacePosY = 0;
-    _.each(TestData.MapMaster[this.currentMap], function(mapMaster) {
+    var mapProgress = this.user.get('mapProgress');
+    var areaProgress = this.user.get('areaProgress');
+    this.currentArea = this.user.get('area');
+    var playerPosY = 0;
+    for (var i = 0; i <= mapProgress; ++i) {
+      var area = TestData.MapMaster[this.user.get('map')][i];
+      if (i == mapProgress) {
+        if (area.areaIds.length >= 2) {
+          var playerPosX = area.areaIds[0] == this.currentArea ? 128 : -128;
+          this.playerLayer.setPosition(playerPosX, 0);
+        }
+        playerPosY += 128 * areaProgress;
+        break;
+      }
+      playerPosY += TestData.SpaceMaster[area.areaIds[0]].length * 128;
+    }
+    
+    var spacePosY = -playerPosY;
+    _.each(TestData.MapMaster[this.user.get('map')], function(mapMaster) {
       _.each(mapMaster.areaIds, function(areaId, areaKey) {
         var posX = 0;
         if (mapMaster.areaIds.length >= 2) {
           posX = areaKey == 0 ? -128 : 128;
         }
-        cc.log(spacePosY);
         var spaceLayer = new SpaceLayer(posX, spacePosY, areaId);
         this.spaceLayers.push(spaceLayer);
-        this.addChild(spaceLayer, LAYER_SPACE);
+        this.gameLayer.addChild(spaceLayer, LAYER_SPACE);
       }.bind(this));
       spacePosY += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
+    }.bind(this));
+    var bgPos = -playerPosY;
+    _.each(TestData.MapMaster[this.user.get('map')], function(mapMaster) {
+      var bgLayer = new GameBgLayer(bgPos, mapMaster.areaIds);
+      bgPos += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
+      this.bgLayers.push(bgLayer);
+      this.gameLayer.addChild(bgLayer, LAYER_BG);
     }.bind(this));
     this.stateMachine.switchTo(this.stateWaitInput);
   },
@@ -235,10 +291,36 @@ var GameScene = cc.Scene.extend({
           this.addChild(this.chartLayer, LAYER_HUD);
           this.stateMachine.switchTo(this.stateWaitChartLayer);
           break;
+        case 'tapMenu':
+          this.showMenu();
+          this.stateMachine.switchTo(this.stateWaitMenuLeftTransition);
         default:
         break;
       }
     }
+  },
+  stateWaitMenuLeftTransition: function() {
+    if (this.isMenuTransition) {
+      return;
+    }
+    this.stateMachine.switchTo(this.stateWaitMenuInput);
+  },
+  stateWaitMenuInput: function() {
+    while (event = eventQueue.dequeue()) {
+      switch (event) {
+        case 'tapMenu':
+          this.hideMenu();
+          this.stateMachine.switchTo(this.stateWaitMenuRightTransition);
+        default:
+        break;
+      }
+    }
+  },
+  stateWaitMenuRightTransition: function() {
+    if (this.isMenuTransition) {
+      return;
+    }
+    this.stateMachine.switchTo(this.stateWaitInput);
   },
   stateWaitChartLayer: function() {
     if (this.chartLayer != null) {
@@ -288,7 +370,7 @@ var GameScene = cc.Scene.extend({
       this.playerLayer.runAction(cc.moveBy(1, cc.p(this.isRightSelect ? 128 : -128, 0)))
       this.currentMapProgress++;
       this.currentAreaProgress = -1;
-      var areaInfo = TestData.MapMaster[this.currentMap][this.currentMapProgress];
+      var areaInfo = TestData.MapMaster[this.user.get('map')][this.currentMapProgress];
       this.currentArea = areaInfo.areaIds[this.isRightSelect ? 0 : 1];
       this.isRightSelect = false;
       this.stateMachine.switchTo(this.stateForward);
@@ -297,10 +379,10 @@ var GameScene = cc.Scene.extend({
   stateForward: function() {
     this.remainingStep--;
     this.currentAreaProgress++;
-    if (this.currentAreaProgress >= TestData.SpaceMaster[this.currentArea].length) {
+    if (this.currentAreaProgress >= TestData.SpaceMaster[this.user.get('area')].length) {
       this.currentAreaProgress = 0;
       this.currentMapProgress++;
-      var areaInfo = TestData.MapMaster[this.currentMap][this.currentMapProgress];
+      var areaInfo = TestData.MapMaster[this.user.get('map')][this.currentMapProgress];
       this.currentArea = areaInfo.areaIds[0];
     }
     _.each(this.bgLayers, function(bgLayer){
@@ -345,6 +427,12 @@ var GameScene = cc.Scene.extend({
     }.bind(this));
     this.addChild(dialogLayer, LAYER_HUD);
     this.stateMachine.switchTo(this.stateWaitEvent);
+    
+    //ユーザデータ保持
+    this.user.set('mapProgress', this.currentMapProgress);
+    this.user.set('areaProgress', this.currentAreaProgress);
+    this.user.set('area', this.currentArea);
+    this.user.save();
   },
   stateWaitEvent: function() {
     cc.log("stateWaitEvent");

@@ -95,6 +95,7 @@ var TitleScene = cc.Scene.extend({
 
         //TODO
         this.isLoading = false;
+        var xhr = cc.loader.getXMLHttpRequest();
         streamXHREventsToLabel(xhr, function(responseText) {
           this.isLoading = false;
           layer.changeStartLabel("Tap Start");

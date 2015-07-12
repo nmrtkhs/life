@@ -20,6 +20,7 @@ var res = {
     Roulette_10_png: "res/roulette_10.png",
     Chart_png: "res/chart.png",
     Loading_Indicator_png: "res/loading_indicator.png",
+    Icon_Menu_png: "res/icon_menu.png",
 };
 
 var g_resources = [];
