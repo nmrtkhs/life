@@ -625,7 +625,7 @@ var GameScene = cc.Scene.extend({
       this.stateMachine.switchTo(this.stateWaitInput);
     }
   },
-  stateShowRankingDialog() {
+  stateShowRankingDialog: function() {
     if (!this.isSelect) {
       return;
     }
