@@ -28,6 +28,7 @@
         "src/view/RouletteLayer.js",
         "src/view/DialogMultiSelectLayer.js",
         "src/view/DialogSelectLayer.js",
+        "src/view/RankingDialogLayer.js",
         "src/view/InputNameLayer.js",
         "src/view/SpaceLayer.js",
         "src/view/GameBgLayer.js",

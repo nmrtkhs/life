@@ -16,15 +16,16 @@ var GameScene = cc.Scene.extend({
   isSelect: false,
   isRightSelect: false,
   isMenuTransition: false,
-//  currentMap: "",
-  // currentMap: "47",
+  isRequest: false,
   currentMapProgress: 0,
   currentArea: "47_20",
   currentAreaProgress: 0,
   rouletteResult: -1,
   multiSelctDialogLyaer: null,
   user: null,
+  sjtbKeys: {},
   areaDivision: {},
+  shigotoNaviResult: {},
   ctor: function() {
     this._super();
     this.stateMachine = new StateMachine(this);
@@ -44,9 +45,11 @@ var GameScene = cc.Scene.extend({
     var statusLayer = new StatusLayer();
     statusLayer.updateTurn(30);
     this.gameLayer.addChild(statusLayer, LAYER_HUD);
-    
+   
+    this.bglayers = [];
+    cc.log("init:" + this.bgLayers.length);
+    this.spaceLayers = [];
     this.user = Parse.User.current();
-    Parse
     this.currentAreaProgress = this.user.get('areaProgress');
     this.currentMapProgress = this.user.get('mapProgress');
     cc.log(this.currentAreaProgress);
@@ -94,7 +97,7 @@ var GameScene = cc.Scene.extend({
     this.menuLayer.runAction(cc.moveBy(.3, cc.p(500, 0)).easing(cc.easeIn(.3)));
   },
   stateAreaSelectDialog: function() {
-    if (this.user.get('area') === undefined) {
+    if (this.user.get('area') === "") {
       var dialogText = "地域を選択します\n";
       var areaDivisionKeys = Object.keys(TestData.AreaDivisionMaster);
       for (var i = 0; i < areaDivisionKeys.length; ++i) {
@@ -110,13 +113,13 @@ var GameScene = cc.Scene.extend({
         }
       }
       this.isSelect = false;
-      this.multiSelectDialogLayer = new DialogMultiSelectLayer( dialogText , function(){
+      this.multiSelectDialogLayer = new DialogMultiSelectLayer(dialogText, false, function(){
         this.isSelect = true;
       }.bind(this));
       this.addChild(this.multiSelectDialogLayer, LAYER_HUD);
       this.stateMachine.switchTo(this.stateWaitAreaDivisionSelectDialog);
     } else {
-      this.stateMachine.switchTo(this.stateJobSelect);
+      this.stateMachine.switchTo(this.stateJobCategorySelect);
     }
   },
   stateWaitAreaDivisionSelectDialog: function() {
@@ -157,7 +160,7 @@ var GameScene = cc.Scene.extend({
       }
     }
     this.isSelect = false;
-    this.multiSelectDialogLayer = new DialogMultiSelectLayer(dialogText , function(){
+    this.multiSelectDialogLayer = new DialogMultiSelectLayer(dialogText, false, function(){
       this.isSelect = true;
     }.bind(this));
     this.addChild(this.multiSelectDialogLayer, LAYER_HUD);
@@ -167,7 +170,6 @@ var GameScene = cc.Scene.extend({
     if (!this.isSelect) {
       return;
     }
-    this.stateCheckJunction
     this.rouletteResult = 0;
     var rouletteLayer = new RouletteLayer(function(rouletteResult){
       this.rouletteResult = rouletteResult;
@@ -185,6 +187,7 @@ var GameScene = cc.Scene.extend({
     this.user.set('map', "47")//todo:
     this.user.set('area', TestData.MapMaster["47"][0].areaIds[0]);
     this.user.save();
+    this.isSelect = false;
     var dialogLayer = new DialogLayer( TestData.PrefecturesMaster[this.currentMap].name + "に決定", function(){
       this.isSelect = true;
     }.bind(this));
@@ -196,40 +199,187 @@ var GameScene = cc.Scene.extend({
       return;
     }
     this.isSelect = false;
-    this.stateMachine.switchTo(this.stateJobSelect);
+    this.stateMachine.switchTo(this.stateJobCategorySelect);
   },
-  stateJobSelect: function() {
-    if (Object.keys(TestData.UserData.job).length == 0)  {
-      cc.loader.loadJs("src/vendor/parse-1.4.2.min.js", function(err){
-          if(err) return console.log("load failed");
-          //success
-          Parse.localStorage = cc.sys.localStorage
-          Parse.initialize("mSG7zu4TcARzR3oyRADDXA2ShP6l7Kw5XigzNjUt", "Fqu944VkhOEZaUsM80Me97rcpKvNuD4kfUCTHsRB");
-
-//          var TestObject = Parse.Object.extend("TestObject");
-//          var testObject = new TestObject();
-//          testObject.save({foo: "bar"}).then(function(object) {
-//              cc.log("yay! it worked");
-//          });
-
-          // Parse.Cloud.run('hello', {spc: "001" + this.currentArea}, {
-          var areaCode = "0" + this.currentMap;
-          Parse.Cloud.run('hello', {spc: areaCode}, {
-            success: function(result) {
-            },
-            error: function(error) {
-            }
-          });
-      }.bind(this));
-
-      this.stateMachine.switchTo(this.stateWaitJobSelect);
+  stateJobCategorySelect: function() {
+    if (this.user.get('jobtypedetail') === "")  {
+      this.sjtbKeys = Object.keys(TestData.ShigotoNavi.sjtb);
+      // ランダムでジョブ大枠を決定
+      this.sjtbKeys = this.sjtbKeys.map(function(a){return {weight:Math.random(), value:a}})
+        .sort(function(a, b){return a.weight - b.weight})
+        .map(function(a){return a.value});
+      this.stateMachine.switchTo(this.stateShowJobCategorySelectDialog);
     } else {
       eventQueue.clear();
       this.stateMachine.switchTo(this.stateSetBgLayer);
     }
   },
-  stateWaitJobSelect: function() {
-    this.stateMachine.switchTo(this.stateSetBgLayer);
+  stateShowJobCategorySelectDialog: function() {
+    var dialogText = "職業カテゴリを選択します\n";
+    var max = this.sjtbKeys.length > 10 ? 10 : this.sjtbKeys.length;
+    for (var i = 0; i < max; ++i) {
+      dialogText += i+1 + ":" + TestData.ShigotoNavi.sjtb[this.sjtbKeys[i]];
+      dialogText += "\n";
+    }
+    this.isSelect = false;
+    this.multiSelectDialogLayer = new DialogMultiSelectLayer(dialogText, true, function(){
+      this.isSelect = true;
+    }.bind(this));
+    this.addChild(this.multiSelectDialogLayer, LAYER_HUD);
+    this.stateMachine.switchTo(this.stateWaitJobCategorySelectDialog);
+  },
+  stateWaitJobCategorySelectDialog: function() {
+    if (!this.isSelect) {
+      return;
+    }
+    this.rouletteResult = 0;
+    var max = this.sjtbKeys.length > 10 ? 10 : this.sjtbKeys.length;
+    var rouletteLayer = new RouletteLayer(function(rouletteResult){
+      this.rouletteResult = rouletteResult;
+    }.bind(this), max);
+    this.addChild(rouletteLayer, LAYER_HUD);
+    this.stateMachine.switchTo(this.stateWaitJobCategorySelectRoulette);
+  },
+  stateWaitJobCategorySelectRoulette: function() {
+    if (this.rouletteResult <= 0) {
+      return;
+    }
+    this.removeChild(this.multiSelectDialogLayer);
+
+    this.shigotoNaviResult = {};
+    this.isRequest = true;
+    LoadingIndicator.show(this);
+    var areaCode = "0" + this.user.get('map');
+    var that = this;
+    Parse.Cloud.run('hello', {spc: areaCode, jt: this.sjtbKeys[this.rouletteResult - 1]}, {
+      success: function(result) {
+        that.shigotoNaviResult = JSON.parse(result).result;
+        cc.log("result: " + result);
+        that.isRequest = false;
+      },
+      error: function(error) {
+        cc.log("error:" + error);
+        that.isRequest = false;
+      }
+    });
+    this.stateMachine.switchTo(this.stateWaitRequestJob);
+  },
+  stateWaitRequestJob: function() {
+    if (this.isRequest) {
+      return;
+    }
+    LoadingIndicator.hide();
+    cc.log(this.shigotoNaviResult);
+    if (this.shigotoNaviResult == null) {
+      //対象職種がなかったのでもう一回
+      this.isSelect = false;
+      var dialogLayer = new DialogLayer("対応職種が見つかりませんでした。再度ルーレットを回します", function(){
+        this.isSelect = true;
+      }.bind(this));
+      this.sjtbKeys.splice(this.rouletteResult - 1, 1);
+      this.addChild(dialogLayer, LAYER_HUD);
+      this.stateMachine.switchTo(this.stateWaitErrorDialogRequestJob);
+      return;
+    }
+    var keys = Object.keys(this.shigotoNaviResult);
+    
+    var dialogText = "職業を選択します\n";
+    for (var i = 0; i < keys.length; ++i) {
+      dialogText += i+1 + ":" + decodeURI(this.shigotoNaviResult[keys[i]].jobtypedetail);
+      dialogText += "\n";
+    }
+    this.isSelect = false;
+    this.multiSelectDialogLayer = new DialogMultiSelectLayer(dialogText, true, function(){
+      this.isSelect = true;
+    }.bind(this));
+    this.addChild(this.multiSelectDialogLayer, LAYER_HUD);
+    this.stateMachine.switchTo(this.stateWaitJobSelectDialog);
+  },
+  stateWaitErrorDialogRequestJob: function() {
+    if (!this.isSelect) {
+      return;
+    }
+    this.stateMachine.switchTo(this.stateWaitJobCategorySelectDialog);
+  },
+  stateWaitJobSelectDialog: function() {
+    if (!this.isSelect) {
+      return;
+    }
+    if (Object.keys(this.shigotoNaviResult).length == 1) {
+      this.rouletteResult = 1;
+      this.stateMachine.switchTo(this.stateWaitJobSelectRoulette);
+      return;
+    }
+    
+    this.rouletteResult = 0;
+    var rouletteLayer = new RouletteLayer(function(rouletteResult){
+      this.rouletteResult = rouletteResult;
+    }.bind(this), Object.keys(this.shigotoNaviResult).length);
+    this.addChild(rouletteLayer, LAYER_HUD);
+    this.stateMachine.switchTo(this.stateWaitJobSelectRoulette);
+  },
+  stateWaitJobSelectRoulette: function() {
+    if (this.rouletteResult <= 0) {
+      return;
+    }
+    this.removeChild(this.multiSelectDialogLayer);
+    
+    // ここで仕事保持しよう
+    var job = this.shigotoNaviResult[this.rouletteResult - 1];
+    // 年収の計算
+    var salary = 0;
+    this.user.set('jobtypedetail', decodeURI(job.jobtypedetail));
+    if (job.salary_y_min) {
+      this.user.set('salaryMin', job.salary_y_min);
+			if (job.salary_y_max) {
+        this.user.set('salaryMax', job.salary_y_max);
+				salary = parseInt((job.salary_y_min + job.salary_y_max) / 2);
+			} else {
+				salary = parseInt(job.salary_y_min);
+			}
+		} else if (job.salary_y_max) {
+      this.user.set('salaryMax', job.salary_y_max);
+      salary = parseInt(job.salary_y_max);
+		} else if (job.salary_m_min) {
+      this.user.set('salaryMin', job.salary_y_min);
+			if (job.salary_m_max) {
+        this.user.set('salaryMax', job.salary_m_max);
+				salary = parseInt((job.salary_m_min + job.salary_m_max) / 2 * 12);
+			} else {
+				salary = parseInt(job.salary_m_min * 12);
+			}
+		} else if (job.salary_m_max) {
+				salary = parseInt(job.salary_m_max * 12);
+        this.user.set('salaryMax', job.salary_m_max * 12);
+		} else if (job.salary_d_min) {
+      this.user.set('salaryMin', job.salary_d_min * 12);
+			if (job.salary_d_max) {
+        this.user.set('salaryMax', job.salary_d_max * 20 * 12);
+				salary = parseInt((job.salary_d_min + job.salary_d_max) / 2 * 20 * 12);
+			} else {
+				salary = parseInt(job.salary_d_min * 20 * 12);
+			}
+		} else if (job.salary_y_max) {
+        this.user.set('salaryMax', job.salary_d_max * 20 * 12);
+				salary = parseInt(job.salary_d_max * 20 * 12);
+		}
+    
+    this.user.set('jobUrlPc', job.url);
+    this.user.set('jobUrlSp', job.url_sp);
+    this.user.save();
+    var dialogLayer = new DialogLayer(decodeURI(this.shigotoNaviResult[this.rouletteResult - 1].jobtypedetail) + "(平均年収" + Number(salary).toLocaleString() +  ")に決定", function(){
+      this.isSelect = true;
+    }.bind(this));
+    this.addChild(dialogLayer, LAYER_HUD);
+    this.stateMachine.switchTo(this.stateWaitJobDecide);
+  },
+  stateWaitJobDecide: function() {
+    if (!this.isSelect) {
+      return;
+    }
+    this.isSelect = false;
+    
+     this.stateMachine.switchTo(this.stateSetBgLayer);
   },
   stateSetBgLayer: function() {
     var mapProgress = this.user.get('mapProgress');
@@ -267,6 +417,7 @@ var GameScene = cc.Scene.extend({
       var bgLayer = new GameBgLayer(bgPos, mapMaster.areaIds);
       bgPos += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
       this.bgLayers.push(bgLayer);
+      cc.log("nanja---" + this.bgLayers.length);
       this.gameLayer.addChild(bgLayer, LAYER_BG);
     }.bind(this));
     this.stateMachine.switchTo(this.stateWaitInput);
@@ -275,7 +426,7 @@ var GameScene = cc.Scene.extend({
     while (event = eventQueue.dequeue()) {
       switch (event) {
         case 'tapRoulette':
-          this.rouletteResult = this.endBgProgress = 0;;
+          this.rouletteResult = this.endBgProgressNum = 0;;
           var rouletteLayer = new RouletteLayer(function(rouletteResult){
           this.rouletteResult = rouletteResult;
           }.bind(this), 6);
@@ -403,14 +554,17 @@ var GameScene = cc.Scene.extend({
   },
   stateForwarding: function() {
     // 全てのアニメが完了
+    cc.log("endBgProgress:" + this.endBgProgressNum);
+    cc.log("bglayers:" + this.bgLayers.length);
     if (this.endBgProgressNum == this.bgLayers.length) {
       this.endBgProgressNum = 0;
       if (TestData.SpaceMaster[this.currentArea][this.currentAreaProgress].type == "goal") {
+        this.isSelect = false;
         var dialogLayer = new DialogLayer("おめでとう！！ゴールしました", function(){
           this.isSelect = true;
         }.bind(this));
         this.addChild(dialogLayer, LAYER_HUD);
-        this.stateMachine.switchTo(this.stateEnd);
+        this.stateMachine.switchTo(this.stateShowRankingDialog);
         return;
       }
       if (this.remainingStep <= 0) {
@@ -422,7 +576,35 @@ var GameScene = cc.Scene.extend({
   },
   stateEvent: function() {
     cc.log("stateEvent");
-    var dialogLayer = new DialogLayer(TestData.SpaceMaster[this.currentArea][this.currentAreaProgress].description, function(){
+    var space = TestData.SpaceMaster[this.currentArea][this.currentAreaProgress];
+    var paramMessage = "";
+    var param = space.value;
+    switch(space.type) {
+      case "money":
+        paramMessage += "お金が";
+        this.user.set("income", this.user.get("income") + param);
+        break;
+      case "hobby":
+        paramMessage += "健康が";
+        this.user.set("health", this.user.get("health") + param);
+        break;
+      case "family":
+        paramMessage += "住居が";
+        this.user.set("housing", this.user.get("housing") + param);
+        break;
+      case "live":
+        paramMessage += "環境が";
+        this.user.set("environment", this.user.get("environment") + param);
+        break;
+      case "wealth":
+        paramMessage += "教育が";
+        this.user.set("education", this.user.get("education") + param);
+        break;
+    }
+    paramMessage += param + "アップしました";
+    space.description += "\n" + paramMessage;
+    
+    var dialogLayer = new DialogLayer(space.description, function(){
       this.isSelect = true;
     }.bind(this));
     this.addChild(dialogLayer, LAYER_HUD);
@@ -432,6 +614,7 @@ var GameScene = cc.Scene.extend({
     this.user.set('mapProgress', this.currentMapProgress);
     this.user.set('areaProgress', this.currentAreaProgress);
     this.user.set('area', this.currentArea);
+    
     this.user.save();
   },
   stateWaitEvent: function() {
@@ -442,7 +625,14 @@ var GameScene = cc.Scene.extend({
       this.stateMachine.switchTo(this.stateWaitInput);
     }
   },
+  stateShowRankingDialog() {
+    if (!this.isSelect) {
+      return;
+    }
+    var dialogLayer = new RankingDialogLayer();
+    this.addChild(dialogLayer, LAYER_HUD);
+    this.stateMachine.switchTo(this.stateEnd);
+  },
   stateEnd: function() {
-
   },
 });

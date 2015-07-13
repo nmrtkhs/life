@@ -27,6 +27,7 @@ StateMachine = (function() {
 
 			this.currentState = state;
 			this.currentState.call(this.target);
+//      cc.log(this.currentState);
 
 			if (this.exit)
 				continue;
@@ -35,6 +36,7 @@ StateMachine = (function() {
 				this.currentState = this.nextState;
 				this.nextState = null;
 				this.currentState.call(this.target);
+//        cc.log(this.currentState);
 
 				if (this.exit)
 					break;

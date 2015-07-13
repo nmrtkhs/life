@@ -2,16 +2,20 @@ var DialogMultiSelectLayer = ModalLayer.extend({
   _className: "DialogLayer",
   _box: null,
 
-  ctor: function(message, onCallback) {
+  ctor: function(message, isBig, onCallback) {
     this._super();
     cc.associateWithNative(this, cc.Layer);
-    DialogMultiSelectLayer.prototype.init.call(this, message, onCallback);
+    DialogMultiSelectLayer.prototype.init.call(this, message, isBig, onCallback);
   },
 
-  init: function(message, onCallback) {
+  init: function(message, isBig, onCallback) {
     var winSize = cc.director.getWinSize();
 
     var blockSize = cc.size(400, 400);
+    if (isBig) {
+      blockSize = cc.size(400, 800);
+    }
+    
     var label = new cc.LabelTTF(
       message,
       "Arial",
@@ -39,6 +43,13 @@ var DialogMultiSelectLayer = ModalLayer.extend({
       onCallback();
     } ,this);
     button.setTitleText("ルーレットを回す");
+    
+    if (isBig) {
+      label.y = winSize.height / 2 + 450;
+      button.setPosition(winSize.width / 2, winSize.height / 2 - 250);
+      this.sprite.height = winSize.height * .6;
+    }
+    
     this.addChild(button);
   },
 });

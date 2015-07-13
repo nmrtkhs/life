@@ -91,7 +91,6 @@ var InputNameLayer = ModalLayer.extend({
         var that = this;
         user.signUp(null, {
           success: function(user){
-            user.set("createdBy", user);
             user.set("housing", 0);
             user.set("income", 0);
             user.set("education", 0);
@@ -101,6 +100,11 @@ var InputNameLayer = ModalLayer.extend({
             user.set("turn", 0);
             user.set("mapProgress", 0);
             user.set("areaProgress", 0);
+            user.set("salaryMin", 0);
+            user.set("salaryMax", 0);
+            user.set("jobtypedetail", "");
+            user.set("area", "");
+            user.set("map", "");
             user.save();
             onCallback(that.userNameBox.getString());
           },
