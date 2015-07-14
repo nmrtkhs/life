@@ -91,12 +91,11 @@ var InputNameLayer = ModalLayer.extend({
         var that = this;
         user.signUp(null, {
           success: function(user){
-            user.set("housing", 0);
-            user.set("income", 0);
-            user.set("education", 0);
-            user.set("environment", 0);
-            user.set("health", 0);
-            user.set("money", 0);
+            user.set("housing", 5);
+            user.set("income", 5);
+            user.set("education", 5);
+            user.set("environment", 5);
+            user.set("health", 5);
             user.set("turn", 0);
             user.set("mapProgress", 0);
             user.set("areaProgress", 0);
