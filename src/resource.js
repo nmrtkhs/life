@@ -18,6 +18,7 @@ var res = {
     Roulette_8_png: "res/roulette_8.png",
     Roulette_9_png: "res/roulette_9.png",
     Roulette_10_png: "res/roulette_10.png",
+    Roulette_Arrow_png: "res/roulette_arrow.png",
     Chart_png: "res/chart.png",
     Loading_Indicator_png: "res/loading_indicator.png",
     Icon_Menu_png: "res/icon_menu.png",

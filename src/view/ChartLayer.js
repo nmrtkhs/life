@@ -44,13 +44,34 @@ var ChartLayer = cc.LayerColor.extend({
     cc.log(topPoints);
     draw.drawPoly(topPoints, cc.color(255,0,0,128), 8, cc.color(0,128,128,255));
     
+    var blockSize = cc.size(400, 200);
+    var label = new cc.LabelTTF(
+      user.get("jobtypedetail"),
+      "Arial",
+      24,
+      blockSize,
+      cc.TEXT_ALIGNMENT_CENTER,
+      cc.VERTICAL_TEXT_ALIGNMENT_CENTER
+    );
+     label.anchorX = 0.5;
+     label.anchorY = 1;
+    label.x = winSize.width / 2;
+    label.y = winSize.height / 2 + 500;
+    label.color = cc.color(255, 255, 255);
+    label.fillStyle = cc.color(128, 128, 128);
+    this.addChild(label);
+    
     var listener = cc.eventManager.addListener({
       event: cc.EventListener.TOUCH_ONE_BY_ONE,
       onTouchBegan: function(touch, event) {
           return true;
       },
       onTouchEnded: function(touch, event) {
-        onCallback();
+        if (cc.rectContainsPoint(label.getBoundingBox(), touch.getLocation())) {
+          window.open(user.get("jobUrlPc"));
+        } else {
+          onCallback();
+        }
       },
     }, this);
   },

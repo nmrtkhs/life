@@ -24,6 +24,14 @@ var RouletteNode = cc.Node.extend({
         scale: 1,
     });
     this.addChild(this.sprite, 0);
+    
+    this.arrowSprite = new cc.Sprite(res.Roulette_Arrow_png);
+    this.arrowSprite.attr({
+        x: winSize.width / 2,
+        y: winSize.height / 2 + 300,
+        scale: -.3,
+    });
+    this.addChild(this.arrowSprite, 0);
   },
   
   spin: function(spinEndCallback) {

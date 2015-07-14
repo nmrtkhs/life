@@ -39,7 +39,8 @@ var StatusLayer = cc.Layer.extend({
         if (cc.rectContainsPoint(spriteRect, touch.getLocation())) {
           eventQueue.enqueue("tapMenu");
         } else if (cc.rectContainsPoint(topRect, touch.getLocation())) {
-          eventQueue.enqueue("tapStatus");
+            // TODO 一旦プレイヤーをタップしたステータスに行くようにする
+//          eventQueue.enqueue("tapStatus");
         }
       }.bind(this),
     }, this);
