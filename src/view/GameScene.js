@@ -182,10 +182,10 @@ var GameScene = cc.Scene.extend({
       return;
     }
     this.removeChild(this.multiSelectDialogLayer);
-//    this.currentMap = this.prefectures[this.rouletteResult-1];
-    this.currentMap = "47";//todo
-    this.user.set('map', "47")//todo:
-    this.user.set('area', TestData.MapMaster["47"][0].areaIds[0]);
+    this.currentMap = this.prefectures[this.rouletteResult-1];
+//    this.currentMap = "47";//todo
+    this.user.set('map', this.currentMap)//todo:
+    this.user.set('area', TestData.MapMaster[47][0].areaIds[0]);
     this.user.save();
     this.isSelect = false;
     var dialogLayer = new DialogLayer( TestData.PrefecturesMaster[this.currentMap].name + "に決定", function(){
@@ -249,9 +249,8 @@ var GameScene = cc.Scene.extend({
     this.shigotoNaviResult = {};
     this.isRequest = true;
     LoadingIndicator.show(this);
-    var areaCode = "0" + this.user.get('map');
     var that = this;
-    Parse.Cloud.run('hello', {spc: areaCode, jt: this.sjtbKeys[this.rouletteResult - 1]}, {
+    Parse.Cloud.run('hello', {spc: TestData.ShigotoNavi.spc[this.user.get('map')], jt: this.sjtbKeys[this.rouletteResult - 1]}, {
       success: function(result) {
         that.shigotoNaviResult = JSON.parse(result).result;
         cc.log("result: " + result);
@@ -366,6 +365,12 @@ var GameScene = cc.Scene.extend({
     
     this.user.set('jobUrlPc', job.url);
     this.user.set('jobUrlSp', job.url_sp);
+    
+    //TODO 今は沖縄しかデータないけど後々用意したら消す
+    this.currentMap = "47";
+    this.user.set('map', "47")//todo:
+    this.user.set('area', TestData.MapMaster[47][0].areaIds[0]);
+    
     this.user.save();
     var dialogLayer = new DialogLayer(decodeURI(this.shigotoNaviResult[this.rouletteResult - 1].jobtypedetail) + "(平均年収" + Number(salary).toLocaleString() +  ")に決定", function(){
       this.isSelect = true;
@@ -379,12 +384,13 @@ var GameScene = cc.Scene.extend({
     }
     this.isSelect = false;
     
-     this.stateMachine.switchTo(this.stateSetBgLayer);
+    this.stateMachine.switchTo(this.stateSetBgLayer);
   },
   stateSetBgLayer: function() {
     var mapProgress = this.user.get('mapProgress');
     var areaProgress = this.user.get('areaProgress');
     this.currentArea = this.user.get('area');
+    
     var playerPosY = 0;
     for (var i = 0; i <= mapProgress; ++i) {
       var area = TestData.MapMaster[this.user.get('map')][i];
@@ -417,7 +423,6 @@ var GameScene = cc.Scene.extend({
       var bgLayer = new GameBgLayer(bgPos, mapMaster.areaIds);
       bgPos += TestData.SpaceMaster[mapMaster.areaIds[0]].length * 128;
       this.bgLayers.push(bgLayer);
-      cc.log("nanja---" + this.bgLayers.length);
       this.gameLayer.addChild(bgLayer, LAYER_BG);
     }.bind(this));
     this.stateMachine.switchTo(this.stateWaitInput);
