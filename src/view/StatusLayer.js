@@ -13,7 +13,17 @@ var StatusLayer = cc.Layer.extend({
       cc.p(winSize.width, winSize.height - 100),
       cc.p(0, winSize.height - 100),
     ];
-    draw.drawPoly(topPoints, cc.color(255,0,0,255), 8, cc.color(0,128,128,255));
+    draw.drawPoly(topPoints, cc.color(241,241, 241), 8, cc.color(241,241, 241));
+   
+    var bgSprite = new cc.DrawNode();
+    this.addChild(bgSprite);
+    var bgSpritePoints = [
+      cc.p(winSize.width -100, winSize.height),
+      cc.p(winSize.width, winSize.height),
+      cc.p(winSize.width, winSize.height - 100),
+      cc.p(winSize.width - 100, winSize.height - 100),
+    ];
+    bgSprite.drawPoly(bgSpritePoints, cc.color(220,221, 224), 8, cc.color(220,221, 224));
     
     this.sprite = new cc.Sprite(res.Icon_Menu_png);
     this.sprite.attr({
@@ -62,9 +72,20 @@ var StatusLayer = cc.Layer.extend({
 //    this.turnLabel.y = winSize.height - blockSize.height;
 //    this.addChild(this.turnLabel);
 
+
+    var labelBg = new cc.DrawNode();
+    this.addChild(labelBg);
+    var labelBgPoints = [
+      cc.p(0, winSize.height),
+      cc.p(100, winSize.height),
+      cc.p(100, winSize.height - 100),
+      cc.p(0, winSize.height - 100),
+    ];
+    labelBg.drawPoly(labelBgPoints, cc.color(220,221, 224), 8, cc.color(220,221, 224));
+    
     // 名前
     this.nameLabel = new cc.LabelTTF(
-      "名前:" + TestData.UserData.name,
+      "名前\n" + TestData.UserData.name,
       "Arial",
       24,
       cc.size(400, 100),
@@ -73,8 +94,9 @@ var StatusLayer = cc.Layer.extend({
     );
     this.nameLabel.anchorX = 0;
     this.nameLabel.anchorY = 0;
-    this.nameLabel.x = 0;
+    this.nameLabel.x = 10;
     this.nameLabel.y = winSize.height - blockSize.height;
+    this.nameLabel.color = cc.color(71, 82, 91);
     this.addChild(this.nameLabel);
 
     var button = new ccui.Button();

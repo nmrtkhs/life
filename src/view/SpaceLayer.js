@@ -2,10 +2,10 @@ var SpaceLayer = cc.Layer.extend({
   ctor:function(posX, posY, areaId)  {
     this._super();
     var spaceColor = {
-      'start': cc.color(255, 0, 0),
-      'plus': cc.color(0, 255, 255),
-      'minus': cc.color(0, 0, 255),
-      'goal': cc.color(0,0,0)
+      'start': cc.color(100, 246, 214),
+      'plus': cc.color(244, 246, 214),
+      'minus': cc.color(244, 246, 214),
+      'goal': cc.color(244, 100, 214),
     }
 
     var areaMaster = TestData.AreaMaster[areaId];
@@ -25,26 +25,26 @@ var SpaceLayer = cc.Layer.extend({
       if (i == spaceMaster.length - 1) {
         switch (areaMaster.junctionType) {
           case "normal":
-            draw.drawSegment(cc.p(x, y), cc.p(x, y + 128), 5, cc.color(255, 0, 255, 255));
+            draw.drawSegment(cc.p(x, y), cc.p(x, y + 128), 5, cc.color(247, 96, 114));
             break;
 
           case "toTwo":
-            draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(255, 0, 255, 255));
-            draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(255, 0, 255, 255));
+            draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(247, 96, 114));
+            draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(247, 96, 114));
             break;
 
           case "toOne":
             if (posX > 0) {
-              draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(255, 0, 255, 255));
+              draw.drawSegment(cc.p(x, y), cc.p(x - 128, y + 128), 5, cc.color(247, 96, 114));
             } else {
-              draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(255, 0, 255, 255));
+              draw.drawSegment(cc.p(x, y), cc.p(x + 128, y + 128), 5, cc.color(247, 96, 114));
             }
           break;
           default:
           break;
         }
       } else {
-        draw.drawSegment(cc.p(x, y), cc.p(x, y + 128), 5, cc.color(255, 0, 255, 255));
+        draw.drawSegment(cc.p(x, y), cc.p(x, y + 128), 5, cc.color(247, 96, 114));
       }
       // ベジェ曲線の描画ロジック
       // draw.drawQuadBezier(cc.p(x, y), cc.p(x + (direction * 64), y + 64), cc.p(x, y + 128), 3, 10, cc.color(255, 0, 255, 255));
@@ -53,7 +53,7 @@ var SpaceLayer = cc.Layer.extend({
       spaceMaster[i].type == 'start') {
         color = spaceColor[spaceMaster[i].type];
       }
-      draw.drawDot(cc.p(x, y), 40, cc.color(255, 0, 255, 255));
+      draw.drawDot(cc.p(x, y), 40, cc.color(242, 88, 180));
       draw.drawDot(cc.p(x, y), 35, color);
     }
   }
